@@ -10,8 +10,14 @@ from collections import Counter
 from datetime import datetime, date
 from werkzeug.security import check_password_hash
 
+try:
+    import psycopg2
+except ImportError:
+    psycopg2 = None
+
 app = Flask(__name__)
 app.secret_key = os.environ.get("SECRET_KEY", "dev-secret-key-change-me")
+DATABASE_URL = os.environ.get("DATABASE_URL")
 VISIT_LOG_PATH = os.path.join(app.root_path, "data", "visit_log.csv")
 VISIT_LOG_FIELDS = ["timestamp", "visitor_id", "path", "method"]
 BOTOLA_SEASONS_PATH = os.path.join(app.root_path, "data", "botola_seasons.json")
@@ -204,6 +210,21 @@ def get_visitor_id():
     raw_id = f"{salt}|{ip_address}|{user_agent}"
     return hashlib.sha256(raw_id.encode("utf-8")).hexdigest()[:16]
 
+def get_db_connection():
+    if not DATABASE_URL or psycopg2 is None:
+        return None
+    return psycopg2.connect(DATABASE_URL, sslmode="require")
+
+def write_visit_to_csv(visit_row):
+    os.makedirs(os.path.dirname(VISIT_LOG_PATH), exist_ok=True)
+    file_exists = os.path.exists(VISIT_LOG_PATH)
+
+    with open(VISIT_LOG_PATH, "a", newline="", encoding="utf-8") as log_file:
+        writer = csv.DictWriter(log_file, fieldnames=VISIT_LOG_FIELDS)
+        if not file_exists:
+            writer.writeheader()
+        writer.writerow(visit_row)
+
 def track_visit():
     if request.method != "GET":
         return
@@ -223,19 +244,37 @@ def track_visit():
     if request.path.startswith(excluded_prefixes):
         return
 
-    os.makedirs(os.path.dirname(VISIT_LOG_PATH), exist_ok=True)
-    file_exists = os.path.exists(VISIT_LOG_PATH)
+    visit_row = {
+        "timestamp": datetime.now().isoformat(timespec="seconds"),
+        "visitor_id": get_visitor_id(),
+        "path": request.path,
+        "method": request.method
+    }
 
-    with open(VISIT_LOG_PATH, "a", newline="", encoding="utf-8") as log_file:
-        writer = csv.DictWriter(log_file, fieldnames=VISIT_LOG_FIELDS)
-        if not file_exists:
-            writer.writeheader()
-        writer.writerow({
-            "timestamp": datetime.now().isoformat(timespec="seconds"),
-            "visitor_id": get_visitor_id(),
-            "path": request.path,
-            "method": request.method
-        })
+    conn = get_db_connection()
+    if conn:
+        try:
+            with conn:
+                with conn.cursor() as cur:
+                    cur.execute(
+                        """
+                        insert into public.visit_log (timestamp, visitor_id, path, method)
+                        values (%s, %s, %s, %s)
+                        """,
+                        (
+                            visit_row["timestamp"],
+                            visit_row["visitor_id"],
+                            visit_row["path"],
+                            visit_row["method"],
+                        ),
+                    )
+            return
+        except Exception as exc:
+            app.logger.warning("Could not write visit to database: %s", exc)
+        finally:
+            conn.close()
+
+    write_visit_to_csv(visit_row)
 
 def get_visit_stats():
     stats = {
@@ -247,6 +286,53 @@ def get_visit_stats():
         "total_visitors": 0,
         "top_pages": []
     }
+
+    conn = get_db_connection()
+    if conn:
+        try:
+            with conn:
+                with conn.cursor() as cur:
+                    cur.execute(
+                        """
+                        select count(*), count(distinct visitor_id)
+                        from public.visit_log
+                        where timestamp::date = current_date
+                        """
+                    )
+                    stats["today_views"], stats["today_visitors"] = cur.fetchone()
+
+                    cur.execute(
+                        """
+                        select count(*), count(distinct visitor_id)
+                        from public.visit_log
+                        where timestamp >= date_trunc('month', current_date)
+                        """
+                    )
+                    stats["month_views"], stats["month_visitors"] = cur.fetchone()
+
+                    cur.execute(
+                        """
+                        select count(*), count(distinct visitor_id)
+                        from public.visit_log
+                        """
+                    )
+                    stats["total_views"], stats["total_visitors"] = cur.fetchone()
+
+                    cur.execute(
+                        """
+                        select path, count(*) as views
+                        from public.visit_log
+                        group by path
+                        order by views desc
+                        limit 8
+                        """
+                    )
+                    stats["top_pages"] = cur.fetchall()
+            return stats
+        except Exception as exc:
+            app.logger.warning("Could not read visit stats from database: %s", exc)
+        finally:
+            conn.close()
 
     if not os.path.exists(VISIT_LOG_PATH):
         return stats
