@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, flash, session
+from flask import Flask, render_template, request, redirect, url_for, flash, session, Response
 import pandas as pd
 import os
 import csv
@@ -18,6 +18,8 @@ except ImportError:
 app = Flask(__name__)
 app.secret_key = os.environ.get("SECRET_KEY", "dev-secret-key-change-me")
 DATABASE_URL = os.environ.get("DATABASE_URL")
+SITE_URL = "https://www.wydad-history.com"
+GOOGLE_VERIFICATION_FILE = "googleab9fc45267cc3e75.html"
 VISIT_LOG_PATH = os.path.join(app.root_path, "data", "visit_log.csv")
 VISIT_LOG_FIELDS = ["timestamp", "visitor_id", "path", "method"]
 BOTOLA_SEASONS_PATH = os.path.join(app.root_path, "data", "botola_seasons.json")
@@ -244,6 +246,8 @@ def track_visit():
         "/wp-",
         "/xmlrpc.php",
         "/robots.txt",
+        "/sitemap.xml",
+        "/google",
     )
     if request.path.startswith(excluded_prefixes):
         return
@@ -574,6 +578,51 @@ def login():
 def logout():
     session.pop('logged_in', None)
     return redirect(url_for('index'))
+
+@app.route(f"/{GOOGLE_VERIFICATION_FILE}")
+def google_site_verification():
+    return Response(
+        f"google-site-verification: {GOOGLE_VERIFICATION_FILE}",
+        mimetype="text/plain",
+    )
+
+@app.route("/robots.txt")
+def robots_txt():
+    lines = [
+        "User-agent: *",
+        "Disallow: /admin",
+        "Disallow: /login",
+        "Disallow: /logout",
+        f"Sitemap: {SITE_URL}/sitemap.xml",
+        "",
+    ]
+    return Response("\n".join(lines), mimetype="text/plain")
+
+@app.route("/sitemap.xml")
+def sitemap_xml():
+    pages = [
+        ("/", "daily", "1.0"),
+        ("/matchs", "weekly", "0.9"),
+        ("/players", "weekly", "0.8"),
+        ("/stats", "weekly", "0.8"),
+        ("/legends", "monthly", "0.7"),
+        ("/trophies", "monthly", "0.7"),
+        ("/formations", "monthly", "0.6"),
+    ]
+    xml = [
+        '<?xml version="1.0" encoding="UTF-8"?>',
+        '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">',
+    ]
+    for path, changefreq, priority in pages:
+        xml.extend([
+            "  <url>",
+            f"    <loc>{SITE_URL}{path}</loc>",
+            f"    <changefreq>{changefreq}</changefreq>",
+            f"    <priority>{priority}</priority>",
+            "  </url>",
+        ])
+    xml.append("</urlset>")
+    return Response("\n".join(xml), mimetype="application/xml")
 
 @app.route('/')
 def index():
