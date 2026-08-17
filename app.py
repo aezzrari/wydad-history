@@ -208,7 +208,18 @@ def track_visit():
     if request.method != "GET":
         return
 
-    excluded_prefixes = ("/admin", "/login", "/logout", "/static", "/favicon.ico")
+    excluded_prefixes = (
+        "/admin",
+        "/login",
+        "/logout",
+        "/static",
+        "/favicon.ico",
+        "/.env",
+        "/.git",
+        "/wp-",
+        "/xmlrpc.php",
+        "/robots.txt",
+    )
     if request.path.startswith(excluded_prefixes):
         return
 
