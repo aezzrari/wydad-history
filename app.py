@@ -213,7 +213,11 @@ def get_visitor_id():
 def get_db_connection():
     if not DATABASE_URL or psycopg2 is None:
         return None
-    return psycopg2.connect(DATABASE_URL, sslmode="require")
+    try:
+        return psycopg2.connect(DATABASE_URL, sslmode="require")
+    except Exception as exc:
+        app.logger.warning("Could not connect to visit database: %s", exc)
+        return None
 
 def write_visit_to_csv(visit_row):
     os.makedirs(os.path.dirname(VISIT_LOG_PATH), exist_ok=True)
