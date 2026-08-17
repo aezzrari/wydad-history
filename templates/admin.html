@@ -1,0 +1,587 @@
+{% extends "base.html" %}
+
+{% block content %}
+<style>
+    .admin-container {
+        max-width: 1100px;
+        margin: 0 auto;
+        padding: 20px;
+    }
+
+    .admin-card {
+        background: #ffffff;
+        border-radius: 20px;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+        padding: 30px;
+        margin-bottom: 30px;
+        border: 1px solid var(--card-border);
+    }
+
+    .nav-tabs-admin {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 30px;
+        background: #e2e8f0;
+        padding: 8px;
+        border-radius: 16px;
+    }
+
+    .tab-btn {
+        background: none;
+        border: none;
+        padding: 10px 20px;
+        font-weight: 700;
+        cursor: pointer;
+        color: var(--text-muted);
+        border-radius: 12px;
+        transition: all 0.2s;
+    }
+
+    .tab-btn.active {
+        background: #ffffff;
+        color: var(--wac-red);
+        box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+    }
+
+    .form-section {
+        display: none;
+    }
+
+    .form-section.active {
+        display: block;
+    }
+
+    .form-group {
+        margin-bottom: 20px;
+    }
+
+    .form-group label {
+        display: block;
+        font-weight: 800;
+        margin-bottom: 8px;
+        color: var(--wac-black);
+        font-size: 0.8rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .form-group input, .form-group select {
+        width: 100%;
+        padding: 12px;
+        background: #f8fafc;
+        border: 1px solid var(--card-border);
+        border-radius: 10px;
+        font-size: 0.95rem;
+        color: var(--wac-black);
+    }
+
+    .player-row {
+        display: grid;
+        grid-template-columns: 1.8fr 1fr 0.6fr 0.5fr 0.5fr 0.5fr 0.6fr 0.6fr 40px;
+        gap: 6px;
+        background: #ffffff;
+        padding: 8px 12px;
+        border-radius: 12px;
+        margin-bottom: 8px;
+        align-items: center;
+        border: 1px solid var(--card-border);
+    }
+    
+    .tab-input:disabled {
+        background: #e2e8f0;
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+
+    .player-row > div {
+        text-align: center;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .player-row input, .player-row select {
+        padding: 10px 5px;
+        border: 1px solid var(--card-border);
+        border-radius: 10px;
+        background: #f1f5f9;
+        font-size: 0.85rem;
+        color: var(--wac-black);
+        width: 100%;
+        text-align: center;
+    }
+
+    .player-row input[name="player_name[]"] {
+        text-align: left;
+        padding-left: 12px;
+    }
+
+    .btn-add {
+        background: #10b981;
+        color: white;
+        border: none;
+        padding: 12px 24px;
+        border-radius: 12px;
+        font-weight: 800;
+        cursor: pointer;
+        margin-top: 10px;
+        box-shadow: 0 4px 10px rgba(16, 185, 129, 0.2);
+    }
+
+    .btn-submit {
+        background: var(--wac-red);
+        color: white;
+        border: none;
+        padding: 18px 32px;
+        border-radius: 16px;
+        font-weight: 800;
+        width: 100%;
+        margin-top: 30px;
+        cursor: pointer;
+        box-shadow: 0 10px 20px rgba(218, 0, 0, 0.2);
+    }
+
+    .btn-remove {
+        background: #fee2e2;
+        color: #ef4444;
+        border: none;
+        border-radius: 10px;
+        cursor: pointer;
+        height: 36px;
+        width: 36px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+    }
+
+    .visit-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        gap: 16px;
+        margin: 20px 0;
+    }
+
+    .visit-stat {
+        background: #f8fafc;
+        border: 1px solid var(--card-border);
+        border-radius: 12px;
+        padding: 18px;
+    }
+
+    .visit-stat span {
+        display: block;
+        color: var(--text-muted);
+        font-size: 0.78rem;
+        font-weight: 800;
+        text-transform: uppercase;
+    }
+
+    .visit-stat strong {
+        display: block;
+        margin-top: 8px;
+        color: var(--wac-black);
+        font-size: 2rem;
+    }
+
+    .visit-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 16px;
+    }
+
+    .visit-table th,
+    .visit-table td {
+        padding: 12px;
+        border-bottom: 1px solid var(--card-border);
+        text-align: left;
+    }
+
+    .visit-table th {
+        color: var(--wac-red);
+        font-size: 0.78rem;
+        text-transform: uppercase;
+    }
+</style>
+
+<div class="admin-container mt-4">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+        <div>
+            <h1>Administration Historique</h1>
+            <p style="color: var(--text-muted);">Gérez les matchs et les formations du Wydad.</p>
+        </div>
+        <a href="/logout" class="btn-premium" style="background: var(--wac-black); color: white; border: none; font-size: 0.8rem; text-decoration: none; padding: 10px 20px; box-shadow: none;">Déconnexion</a>
+    </div>
+
+    {% if request.args.get('success') %}
+    <div class="alert alert-success">
+        {{ request.args.get('success') }}
+    </div>
+    {% endif %}
+
+    <div class="nav-tabs-admin">
+        <button class="tab-btn active" onclick="switchTab('tab-manual', this)">➕ Nouveau Match</button>
+        <button class="tab-btn" onclick="switchTab('tab-manage', this)">📋 Liste des Matchs</button>
+        <button class="tab-btn" onclick="switchTab('tab-import', this)">📤 Importation CSV</button>
+        <button class="tab-btn" onclick="switchTab('tab-visits', this)">Visites</button>
+    </div>
+
+    <!-- Tab 1: Manual Entry -->
+    <div id="tab-manual" class="form-section active admin-card">
+        <h3>Saisie Manuelle d'un Match</h3>
+        <form id="matchForm" action="/admin/add_match" method="POST" onsubmit="return handleSubmit(this)">
+            <input type="hidden" name="old_match_key" id="old_match_key">
+            <div id="edit-indicator" style="display: none; background: #e0f2fe; color: #0369a1; padding: 10px; border-radius: 8px; margin-bottom: 20px; font-weight: 700;">
+                ✍️ Mode ÉDITION : Vous modifiez un match existant. <button type="button" onclick="resetForm()" style="background: none; border: none; color: #ef4444; cursor: pointer; text-decoration: underline; font-weight: 800; margin-left: 10px;">Annuler</button>
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                <div class="form-group">
+                    <label>Saison</label>
+                    <input type="text" name="saison" placeholder="ex: 2023/24" required>
+                </div>
+                <div class="form-group">
+                    <label>Date du Match</label>
+                    <input type="date" name="date" required>
+                </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px;">
+                <div class="form-group">
+                    <label>Adversaire</label>
+                    <input type="text" name="equipe" list="teamsList" required>
+                    <datalist id="teamsList">
+                        {% for eq in equipes %}
+                        <option value="{{ eq }}">
+                        {% endfor %}
+                    </datalist>
+                </div>
+                <div class="form-group">
+                    <label>Compétition</label>
+                    <select name="competition">
+                        <option value="Botola">Botola</option>
+                        <option value="Coupe du Trone">Coupe du Trône</option>
+                        <option value="Champions league">Champions league</option>
+                        <option value="Coupe de la CAF">Coupe de la CAF</option>
+                        <option value="Ligue africaine de football">Ligue africaine de football</option>
+                        <option value="Super Coupe d'Afrique">Super Coupe d'Afrique</option>
+                        <option value="Coupe du Monde des Clubs">Coupe du Monde des Clubs</option>
+                        <option value="Autre">Autre</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Journée</label>
+                    <input type="text" name="journee" list="journeesList" placeholder="Sélectionner ou taper..." required>
+                    <datalist id="journeesList">
+                        {% for j in journees %}
+                        <option value="{{ j }}">
+                        {% endfor %}
+                    </datalist>
+                </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px;">
+                <div class="form-group">
+                    <label>Lieu</label>
+                    <select name="lieu">
+                        <option value="Domicile">Domicile</option>
+                        <option value="Extérieur">Extérieur</option>
+                        <option value="Neutre">Neutre</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Score</label>
+                    <input type="text" name="score" placeholder="ex: 2-1" required>
+                </div>
+                <div class="form-group">
+                    <label>Score TAB (Optionnel)</label>
+                    <input type="text" name="score_tab" id="score_tab" placeholder="ex: 5-4">
+                </div>
+            </div>
+
+            <hr>
+            <h4>Formation & Joueurs</h4>
+            <div id="players-container">
+                <div class="player-row" style="font-weight: 800; background: none; font-size: 0.75rem; border: none; box-shadow: none; padding-bottom: 0; color: var(--wac-red); text-transform: uppercase;">
+                    <div style="text-align: left; padding-left: 12px;">Joueur</div>
+                    <div>Poste/Tit.</div>
+                    <div>Min.</div>
+                    <div>Buts</div>
+                    <div>CJ</div>
+                    <div>CR</div>
+                    <div>TAB✅</div>
+                    <div>TAB❌</div>
+                    <div></div>
+                </div>
+            </div>
+            <datalist id="playersList">
+                {% for j in joueurs %}
+                <option value="{{ j }}">
+                {% endfor %}
+            </datalist>
+            <button type="button" class="btn-add" onclick="addPlayerRow()">+ Ajouter un joueur</button>
+
+            <button type="submit" id="submitBtn" class="btn-submit">💾 Enregistrer le Match et la Formation</button>
+        </form>
+    </div>
+
+    <!-- Tab 2: Match Management -->
+    <div id="tab-manage" class="form-section admin-card">
+        <h3>Gestion des Matchs Enregistrés</h3>
+        <p>Consultez ou supprimez les derniers matchs saisis.</p>
+        <div class="table-wrapper" style="margin-top: 20px; border: 1px solid var(--card-border); border-radius: 12px; overflow: hidden;">
+            <table style="width: 100%; border-collapse: collapse; font-size: 0.85rem;">
+                <thead>
+                    <tr style="background: #f8fafc; border-bottom: 2px solid var(--card-border);">
+                        <th style="padding: 12px; text-align: left;">Saison</th>
+                        <th style="padding: 12px; text-align: left;">Date</th>
+                        <th style="padding: 12px; text-align: left;">Adversaire</th>
+                        <th style="padding: 12px; text-align: center;">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for m in recent_matches %}
+                    <tr style="border-bottom: 1px solid var(--card-border);">
+                        <td style="padding: 12px;">{{ m.Saison }}</td>
+                        <td style="padding: 12px;">{{ m.DateMatch }}</td>
+                        <td style="padding: 12px; font-weight: 700;">{{ m.Equipe }}</td>
+                        <td style="padding: 12px; text-align: center; display: flex; gap: 8px; justify-content: center;">
+                            <button onclick="editMatch(this.getAttribute('data-key'))" data-key="{{ m.match_key }}"
+                               style="color: #0369a1; border: none; font-size: 0.75rem; font-weight: 800; padding: 6px 12px; background: rgba(3, 105, 161, 0.05); border-radius: 6px; cursor: pointer;">
+                                ✏️ Modifier
+                            </button>
+                            <a href="{{ url_for('delete_match', match_key=m.match_key) }}" 
+                               onclick="return confirm('Êtes-vous sûr de vouloir supprimer ce match et sa formation ?')"
+                               style="color: var(--wac-red); text-decoration: none; font-size: 0.75rem; font-weight: 800; padding: 6px 12px; background: rgba(218, 0, 0, 0.05); border-radius: 6px;">
+                                🗑️ Supprimer
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Tab 3: CSV Import -->
+    <div id="tab-import" class="form-section admin-card">
+        <h3>Importation en masse via CSV</h3>
+        <p>Sélectionnez le fichier CSV et le type de données correspondantes.</p>
+        <form action="/admin/import_csv" method="POST" enctype="multipart/form-data">
+            <div class="form-group">
+                <label>Type de données</label>
+                <select name="file_type">
+                    <option value="matches">Matchs (Test_import.csv)</option>
+                    <option value="formations">Formations (Wac_Formation.csv)</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Fichier CSV (Séparateur point-virgule ;)</label>
+                <input type="file" name="file" accept=".csv" required>
+            </div>
+            <div style="background: #fff3cd; padding: 10px; border-radius: 6px; font-size: 0.9rem; margin-bottom: 20px;">
+                <strong>Attention :</strong> Assurez-vous que les colonnes du fichier correspondent exactement à la structure existante.
+            </div>
+            <button type="submit" class="btn-submit" style="background: #333;">📤 Importer le fichier</button>
+        </form>
+    </div>
+
+    <div id="tab-visits" class="form-section admin-card">
+        <h3>Statistiques des visites</h3>
+        <p>Les pages admin, login, logout et les fichiers statiques ne sont pas comptabilises.</p>
+
+        <div class="visit-grid">
+            <div class="visit-stat">
+                <span>Vues aujourd'hui</span>
+                <strong>{{ visit_stats.today_views }}</strong>
+            </div>
+            <div class="visit-stat">
+                <span>Visiteurs aujourd'hui</span>
+                <strong>{{ visit_stats.today_visitors }}</strong>
+            </div>
+            <div class="visit-stat">
+                <span>Vues ce mois</span>
+                <strong>{{ visit_stats.month_views }}</strong>
+            </div>
+            <div class="visit-stat">
+                <span>Visiteurs ce mois</span>
+                <strong>{{ visit_stats.month_visitors }}</strong>
+            </div>
+            <div class="visit-stat">
+                <span>Vues total</span>
+                <strong>{{ visit_stats.total_views }}</strong>
+            </div>
+            <div class="visit-stat">
+                <span>Visiteurs total</span>
+                <strong>{{ visit_stats.total_visitors }}</strong>
+            </div>
+        </div>
+
+        <h4>Pages les plus consultees</h4>
+        <table class="visit-table">
+            <thead>
+                <tr>
+                    <th>Page</th>
+                    <th>Vues</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for page, views in visit_stats.top_pages %}
+                <tr>
+                    <td>{{ page }}</td>
+                    <td>{{ views }}</td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="2">Aucune visite enregistree pour le moment.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+    function switchTab(tabId, btn) {
+        document.querySelectorAll('.form-section').forEach(s => s.classList.remove('active'));
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById(tabId).classList.add('active');
+        btn.classList.add('active');
+    }
+
+    function resetForm() {
+        document.getElementById('matchForm').reset();
+        document.getElementById('old_match_key').value = '';
+        document.getElementById('edit-indicator').style.display = 'none';
+        document.getElementById('players-container').innerHTML = `
+            <div class="player-row" style="font-weight: 800; background: none; font-size: 0.75rem; border: none; box-shadow: none; padding-bottom: 0; color: var(--wac-red); text-transform: uppercase;">
+                <div style="text-align: left; padding-left: 12px;">Joueur</div>
+                <div>Poste/Tit.</div>
+                <div>Min.</div>
+                <div>Buts</div>
+                <div>CJ</div>
+                <div>CR</div>
+                <div>TAB✅</div>
+                <div>TAB❌</div>
+                <div></div>
+            </div>
+        `;
+        addPlayerRow();
+        updateTabStatus();
+    }
+
+    function updateTabStatus() {
+        const hasTab = document.getElementById('score_tab').value.trim() !== '';
+        document.querySelectorAll('.tab-input').forEach(input => {
+            input.disabled = !hasTab;
+        });
+    }
+
+    document.getElementById('score_tab').addEventListener('input', updateTabStatus);
+
+    async function editMatch(key) {
+        try {
+            const response = await fetch(`/admin/get_match/${encodeURIComponent(key)}`);
+            const data = await response.json();
+            
+            if (data.error) {
+                alert(data.error);
+                return;
+            }
+
+            switchTab('tab-manual', document.querySelector('.tab-btn'));
+            
+            const form = document.getElementById('matchForm');
+            form.querySelector('input[name="saison"]').value = data.match.Saison;
+            form.querySelector('input[name="date"]').value = data.match.DateMatch;
+            form.querySelector('input[name="equipe"]').value = data.match.Equipe;
+            form.querySelector('select[name="competition"]').value = data.match.Competition;
+            form.querySelector('input[name="journee"]').value = data.match.Journee;
+            form.querySelector('select[name="lieu"]').value = data.match.Lieu;
+            let rawScore = data.match.Score || '';
+            let scoreMain = rawScore;
+            let scoreTab = '';
+            
+            if (rawScore.includes('(')) {
+                const parts = rawScore.split('(');
+                scoreMain = parts[0].trim();
+                scoreTab = parts[1].replace(')', '').trim();
+            }
+
+            form.querySelector('input[name="score"]').value = scoreMain;
+            form.querySelector('input[name="score_tab"]').value = scoreTab;
+            
+            document.getElementById('old_match_key').value = key;
+            document.getElementById('edit-indicator').style.display = 'block';
+
+            const container = document.getElementById('players-container');
+            const header = container.firstElementChild;
+            container.innerHTML = '';
+            container.appendChild(header);
+
+            data.players.forEach(p => {
+                const row = document.createElement('div');
+                row.className = 'player-row';
+                row.innerHTML = `
+                    <input type="text" name="player_name[]" list="playersList" value="${p.Joueur}" required>
+                    <select name="player_titulaire[]">
+                        <option value="Tit." ${p.Titulaire === 'Tit.' ? 'selected' : ''}>Titulaire</option>
+                        <option value="Remp." ${p.Titulaire === 'Remp.' ? 'selected' : ''}>Remplaçant</option>
+                    </select>
+                    <input type="number" name="player_minutes[]" value="${p.Minutes}">
+                    <input type="number" name="player_buts[]" value="${p.Buts}">
+                    <input type="number" step="1" name="player_jaunes[]" value="${p.CartonJaune}">
+                    <input type="number" step="1" name="player_rouges[]" value="${p.CartonRouge}">
+                    <input type="number" name="player_tab_marque[]" class="tab-input" value="${p.TAB_Marque || 0}">
+                    <input type="number" name="player_tab_rate[]" class="tab-input" value="${p.TAB_Rate || 0}">
+                    <button type="button" class="btn-remove" onclick="this.parentElement.remove()">×</button>
+                `;
+                container.appendChild(row);
+            });
+            
+            updateTabStatus();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+
+        } catch (err) {
+            console.error(err);
+            alert("Erreur lors de la récupération du match");
+        }
+    }
+
+    function addPlayerRow() {
+        const container = document.getElementById('players-container');
+        const row = document.createElement('div');
+        const hasTab = document.getElementById('score_tab').value.trim() !== '';
+        row.className = 'player-row';
+        row.innerHTML = `
+            <input type="text" name="player_name[]" list="playersList" placeholder="Nom" required>
+            <select name="player_titulaire[]">
+                <option value="Tit.">Titulaire</option>
+                <option value="Remp.">Remplaçant</option>
+            </select>
+            <input type="number" name="player_minutes[]" placeholder="90" value="90">
+            <input type="number" name="player_buts[]" placeholder="0" value="0">
+            <input type="number" step="1" name="player_jaunes[]" placeholder="0" value="0">
+            <input type="number" step="1" name="player_rouges[]" placeholder="0" value="0">
+            <input type="number" name="player_tab_marque[]" class="tab-input" placeholder="0" value="0" ${hasTab ? '' : 'disabled'}>
+            <input type="number" name="player_tab_rate[]" class="tab-input" placeholder="0" value="0" ${hasTab ? '' : 'disabled'}>
+            <button type="button" class="btn-remove" onclick="this.parentElement.remove()">×</button>
+        `;
+        container.appendChild(row);
+    }
+
+    // Prevent double submission
+    function handleSubmit(form) {
+        const btn = document.getElementById('submitBtn');
+        if (btn.disabled) return false; // Already submitted
+        btn.disabled = true;
+        btn.textContent = '⏳ Enregistrement en cours...';
+        btn.style.opacity = '0.6';
+        return true;
+    }
+
+    // Add 11 rows by default
+    window.onload = function() {
+        for(let i=0; i<11; i++) addPlayerRow();
+    };
+</script>
+{% endblock %}

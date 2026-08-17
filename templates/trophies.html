@@ -1,0 +1,328 @@
+{% extends "base.html" %}
+
+{% block title %}Palmar&egrave;s - WAC History{% endblock %}
+
+{% block extra_css %}
+<style>
+    .trophies-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 20px;
+    }
+
+    .page-title {
+        color: var(--wac-black);
+        font-size: 1.8rem;
+        font-weight: 800;
+        margin-bottom: 5px;
+    }
+
+    .page-subtitle {
+        color: var(--text-muted);
+        font-size: 0.9rem;
+        margin-bottom: 24px;
+    }
+
+    .honours-summary,
+    .competitions-grid,
+    .honours-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 14px;
+        margin-bottom: 24px;
+    }
+
+    @media (min-width: 760px) {
+        .honours-summary {
+            grid-template-columns: repeat(5, 1fr);
+        }
+
+        .competitions-grid,
+        .honours-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+
+    .honour-card {
+        text-align: center;
+    }
+
+    .honour-card i,
+    .section-title i,
+    .competition-summary i {
+        color: var(--wac-red);
+        width: 22px;
+        height: 22px;
+    }
+
+    .competition-photo {
+        width: 34px;
+        height: 34px;
+        object-fit: contain;
+        flex: 0 0 auto;
+    }
+
+    .honour-card .value {
+        color: var(--wac-black);
+        font-size: 2rem;
+        font-weight: 800;
+        line-height: 1;
+    }
+
+    .honour-card .label {
+        color: var(--text-muted);
+        font-size: 0.72rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-top: 8px;
+    }
+
+    .section-title {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        color: var(--wac-black);
+        font-size: 1rem;
+        margin-bottom: 16px;
+    }
+
+    .competition-card {
+        padding: 0;
+        overflow: hidden;
+    }
+
+    .competition-card + .competition-card {
+        margin-top: 12px;
+    }
+
+    .competition-summary {
+        display: grid;
+        grid-template-columns: auto 1fr auto;
+        align-items: center;
+        gap: 12px;
+        cursor: pointer;
+        list-style: none;
+        padding: 16px;
+    }
+
+    .competition-summary::-webkit-details-marker {
+        display: none;
+    }
+
+    .competition-name {
+        color: var(--wac-black);
+        font-weight: 800;
+        line-height: 1.2;
+    }
+
+    .competition-count {
+        color: #047857;
+        font-weight: 800;
+        white-space: nowrap;
+    }
+
+    .season-lines {
+        border-top: 1px solid var(--card-border);
+        padding: 8px 16px 16px 50px;
+    }
+
+    .season-line {
+        display: flex;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 8px 0;
+        border-bottom: 1px solid rgba(209, 213, 219, 0.65);
+        color: var(--text-main);
+        font-size: 0.9rem;
+    }
+
+    .season-line:last-child {
+        border-bottom: none;
+    }
+
+    .history-table-wrap {
+        overflow-x: auto;
+    }
+
+    .history-table {
+        width: 100%;
+        min-width: 760px;
+        border-collapse: collapse;
+        font-size: 0.85rem;
+    }
+
+    .history-table th,
+    .history-table td {
+        border-bottom: 1px solid var(--card-border);
+        padding: 10px 8px;
+        text-align: center;
+        white-space: nowrap;
+    }
+
+    .history-table th:nth-child(2),
+    .history-table td:nth-child(2),
+    .history-table th:nth-child(3),
+    .history-table td:nth-child(3) {
+        text-align: left;
+    }
+
+    .history-table th {
+        color: var(--text-muted);
+        font-size: 0.68rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .champion-row {
+        background: rgba(218, 0, 0, 0.08);
+        color: var(--wac-black);
+        font-weight: 800;
+    }
+</style>
+{% endblock %}
+
+{% macro competition_cards(items) %}
+    {% for item in items %}
+        <details class="glass-card competition-card">
+            <summary class="competition-summary">
+                {% if item.icon.startswith('img-') %}
+                    <img
+                        class="competition-photo"
+                        src="{{ url_for('static', filename='img/trophies/' ~ item.icon[4:] ~ '.png') }}"
+                        alt=""
+                        onerror="this.style.display='none'"
+                    >
+                {% else %}
+                    <i data-lucide="{{ item.icon }}"></i>
+                {% endif %}
+                <span class="competition-name">{{ item.competition }}</span>
+                <span class="competition-count">{{ item.titles|length }} titre{% if item.titles|length > 1 %}s{% endif %}</span>
+            </summary>
+            <div class="season-lines">
+                {% for title in item.titles|sort(attribute='season') %}
+                    <div class="season-line">
+                        <strong>{{ title.season }}</strong>
+                        {% if title.detail and title.detail.points is defined %}
+                            <span>{{ title.detail.points }} pts</span>
+                        {% endif %}
+                    </div>
+                {% endfor %}
+            </div>
+        </details>
+    {% endfor %}
+{% endmacro %}
+
+{% block content %}
+<div class="trophies-container">
+    <h1 class="page-title">PALMAR&Egrave;S</h1>
+    <p class="page-subtitle">Titres, classements et champions harmonis&eacute;s depuis les archives Football Marocain.</p>
+
+    <div class="honours-summary">
+        <div class="glass-card honour-card">
+            <i data-lucide="shield-check"></i>
+            <div class="value">{{ honours.total_league_titles }}</div>
+            <div class="label">Botola</div>
+        </div>
+        <div class="glass-card honour-card">
+            <i data-lucide="crown"></i>
+            <div class="value">{{ honours.total_cup_titles }}</div>
+            <div class="label">Coupe du Tr&ocirc;ne</div>
+        </div>
+        <div class="glass-card honour-card">
+            <i data-lucide="star"></i>
+            <div class="value">{{ honours.total_african_trophies }}</div>
+            <div class="label">Afrique</div>
+        </div>
+        <div class="glass-card honour-card">
+            <i data-lucide="sparkles"></i>
+            <div class="value">{{ honours.total_arab_trophies }}</div>
+            <div class="label">Arabe</div>
+        </div>
+        <div class="glass-card honour-card">
+            <i data-lucide="globe-2"></i>
+            <div class="value">{{ honours.total_intercontinental_trophies }}</div>
+            <div class="label">Afro-Asiatique</div>
+        </div>
+    </div>
+
+    <div class="competitions-grid">
+        <div>
+            <h2 class="section-title"><i data-lucide="landmark"></i> Titres nationaux</h2>
+            {{ competition_cards(honours.national_competitions) }}
+        </div>
+        <div>
+            <h2 class="section-title"><i data-lucide="star"></i> Titres africains</h2>
+            {{ competition_cards(honours.african_competitions) }}
+
+            <h2 class="section-title"><i data-lucide="sparkles"></i> Titres arabes</h2>
+            {{ competition_cards(honours.arab_competitions) }}
+
+            <h2 class="section-title"><i data-lucide="globe-2"></i> Titre afro-asiatique</h2>
+            {{ competition_cards(honours.intercontinental_competitions) }}
+        </div>
+    </div>
+
+    <div class="honours-grid">
+        <div class="glass-card">
+            <h2 class="section-title"><i data-lucide="trophy"></i> Palmar&egrave;s Championnat</h2>
+            <div class="history-table-wrap">
+                <table class="history-table">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Club</th>
+                            <th>Titres</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for club in league_honours %}
+                            <tr class="{% if club.club == 'Wydad Athletic Club' %}champion-row{% endif %}">
+                                <td>{{ loop.index }}</td>
+                                <td>{{ club.club }}</td>
+                                <td>{{ club.count }}</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="glass-card">
+            <h2 class="section-title"><i data-lucide="list-ordered"></i> Historique Botola du WAC</h2>
+            <div class="history-table-wrap">
+                <table class="history-table">
+                    <thead>
+                        <tr>
+                            <th>Saison</th>
+                            <th>Rang</th>
+                            <th>Champion</th>
+                            <th>MJ</th>
+                            <th>G</th>
+                            <th>N</th>
+                            <th>P</th>
+                            <th>Pts</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for season in botola_seasons|reverse %}
+                            {% if season.wac %}
+                                <tr class="{% if season.wac.rank == 1 %}champion-row{% endif %}">
+                                    <td>{{ season.label }}</td>
+                                    <td>{{ season.wac.rank }}</td>
+                                    <td>{{ season.championDisplay }}{% if season.championTitleCount %} ({{ season.championTitleCount }}){% endif %}</td>
+                                    <td>{{ season.wac.played }}</td>
+                                    <td>{{ season.wac.won }}</td>
+                                    <td>{{ season.wac.drawn }}</td>
+                                    <td>{{ season.wac.lost }}</td>
+                                    <td>{{ season.wac.points }}</td>
+                                </tr>
+                            {% endif %}
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,152 @@
+{% extends "base.html" %}
+
+{% block title %}L&eacute;gendes - WAC History{% endblock %}
+
+{% block extra_css %}
+<style>
+    .legends-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 20px;
+    }
+
+    .page-title {
+        color: var(--wac-black);
+        font-size: 1.8rem;
+        font-weight: 800;
+        margin-bottom: 5px;
+    }
+
+    .page-subtitle {
+        color: var(--text-muted);
+        font-size: 0.9rem;
+        margin-bottom: 24px;
+    }
+
+    .legends-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 16px;
+        align-items: start;
+    }
+
+    @media (min-width: 700px) {
+        .legends-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+
+    @media (min-width: 1060px) {
+        .legends-grid {
+            grid-template-columns: repeat(3, 1fr);
+        }
+    }
+
+    .legend-card {
+        overflow: hidden;
+        padding: 0;
+        align-self: start;
+    }
+
+    .legend-photo-wrap {
+        position: relative;
+        width: 100%;
+        aspect-ratio: 4 / 3;
+        background: #111111;
+    }
+
+    .legend-photo {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+    }
+
+    .legend-photo.contain {
+        object-fit: contain;
+    }
+
+    .legend-body {
+        padding: 16px;
+    }
+
+    .legend-name {
+        color: var(--wac-black);
+        font-size: 1.08rem;
+        font-weight: 800;
+        margin-bottom: 8px;
+    }
+
+    .legend-meta {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        margin-bottom: 12px;
+        color: var(--text-muted);
+        font-size: 0.82rem;
+        font-weight: 800;
+    }
+
+    .legend-period {
+        color: var(--wac-red);
+    }
+
+    .legend-highlight {
+        color: var(--text-main);
+        font-weight: 800;
+        line-height: 1.35;
+    }
+
+    .legend-source {
+        color: var(--text-muted);
+        font-size: 0.72rem;
+        margin-top: 12px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="legends-container">
+    <h1 class="page-title">L&Eacute;GENDES</h1>
+    <p class="page-subtitle">Figures majeures de l'histoire du Wydad Athletic Club.</p>
+
+    <div class="legends-grid">
+        {% for legend in legends %}
+            <article class="glass-card legend-card">
+                {% if legend.image or legend.local_image %}
+                    <div class="legend-photo-wrap">
+                    {% if legend.local_image %}
+                        <img
+                            class="legend-photo{% if legend.photo_fit == 'contain' %} contain{% endif %}"
+                            src="{{ url_for('static', filename='img/legends/' ~ legend.local_image) }}"
+                            alt="{{ legend.name }}"
+                            onerror="this.closest('.legend-photo-wrap').style.display='none'"
+                        >
+                    {% elif legend.image %}
+                        <img
+                            class="legend-photo{% if legend.photo_fit == 'contain' %} contain{% endif %}"
+                            src="{{ legend.image }}"
+                            alt="{{ legend.name }}"
+                            referrerpolicy="no-referrer"
+                            onerror="this.closest('.legend-photo-wrap').style.display='none'"
+                        >
+                    {% endif %}
+                    </div>
+                {% endif %}
+                <div class="legend-body">
+                    <h2 class="legend-name">{{ legend.name }}</h2>
+                    <div class="legend-meta">
+                        <span class="legend-period">{{ legend.period }}</span>
+                        <span>{{ legend.role }}</span>
+                    </div>
+                    <div class="legend-highlight">{{ legend.highlight }}</div>
+                    {% if legend.image_source %}
+                        <div class="legend-source">Image: {{ legend.image_source }}</div>
+                    {% endif %}
+                </div>
+            </article>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,226 @@
+{% extends "base.html" %}
+
+{% block title %}Formation - WAC History{% endblock %}
+
+{% block content %}
+<style>
+    .formation-container {
+        padding: 20px;
+        max-width: 1000px;
+        margin: 0 auto;
+    }
+
+    .back-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        text-decoration: none;
+        color: var(--text-muted);
+        font-weight: 700;
+        margin-bottom: 25px;
+        font-size: 0.9rem;
+        transition: color 0.2s;
+    }
+
+    .back-btn:hover {
+        color: var(--wac-red);
+    }
+
+    .match-header-card {
+        background: #ffffff;
+        border-radius: 20px;
+        padding: 25px;
+        margin-bottom: 30px;
+        border: 1px solid var(--card-border);
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+        text-align: center;
+    }
+
+    .match-header-card .date {
+        color: #1e293b; /* Dark gray for clarity */
+        font-weight: 800;
+        font-size: 1rem;
+        margin-bottom: 5px;
+        text-transform: uppercase;
+    }
+
+    .match-header-card .saison {
+        color: var(--text-muted);
+        font-size: 0.85rem;
+        font-weight: 600;
+    }
+
+    .formation-title {
+        font-size: 1.2rem;
+        font-weight: 800;
+        color: var(--wac-black);
+        margin-bottom: 15px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .formation-card {
+        background: #ffffff;
+        border-radius: 20px;
+        border: 1px solid var(--card-border);
+        overflow: hidden;
+        margin-bottom: 30px;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+    }
+
+    .formation-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    .formation-table th {
+        background: #f8fafc;
+        padding: 15px;
+        text-align: center;
+        font-size: 0.75rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        color: var(--wac-black);
+        border-bottom: 2px solid var(--card-border);
+    }
+
+    .formation-table td {
+        padding: 15px;
+        text-align: center;
+        border-bottom: 1px solid var(--card-border);
+        color: var(--text-main);
+        font-size: 0.9rem;
+    }
+
+    .formation-table tr:last-child td {
+        border-bottom: none;
+    }
+
+    .player-name-cell {
+        text-align: left !important;
+        padding-left: 20px !important;
+        font-weight: 700;
+        color: var(--wac-black);
+    }
+
+    .stat-icon {
+        font-size: 1.1rem;
+        display: inline-block;
+        margin: 0 2px;
+    }
+
+    .double-yellow {
+        display: inline-block;
+        position: relative;
+        width: 28px;
+        height: 22px;
+        margin: 0 4px;
+        vertical-align: middle;
+    }
+
+    .double-yellow .card {
+        position: absolute;
+        width: 14px;
+        height: 18px;
+        border-radius: 2px;
+        top: 50%;
+        transform: translateY(-50%);
+    }
+
+    .double-yellow .card-yellow {
+        background: #facc15;
+        left: 0;
+        z-index: 1;
+        box-shadow: 1px 1px 3px rgba(0,0,0,0.15);
+    }
+
+    .double-yellow .card-red {
+        background: #ef4444;
+        left: 10px;
+        z-index: 2;
+        box-shadow: 1px 1px 3px rgba(0,0,0,0.2);
+    }
+</style>
+
+<div class="formation-container">
+    <a href="/matchs" class="back-btn">
+        <i data-lucide="arrow-left"></i> RETOUR AUX MATCHS
+    </a>
+
+    {% if titulaires %}
+    <div class="match-header-card">
+        <div class="date">{{ titulaires[0]["Date"] }}</div>
+        <div class="saison">Saison {{ titulaires[0]["Saison"] }} - {{ titulaires[0]["Equipe"] }}</div>
+    </div>
+    {% endif %}
+
+    <h3 class="formation-title">
+        <i data-lucide="user-check" style="color: #16a34a;"></i> TITULAIRES
+    </h3>
+    <div class="formation-card">
+        <table class="formation-table">
+            <thead>
+                <tr>
+                    <th style="text-align: left; padding-left: 20px;">Joueur</th>
+                    <th>Minutes</th>
+                    <th>Événements</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for joueur in titulaires %}
+                <tr>
+                    <td class="player-name-cell">{{ joueur["Joueur"] }}</td>
+                    <td><span style="font-weight: 700;">{{ joueur["Minutes"] }}'</span></td>
+                    <td>
+                        {% for i in range(joueur['Buts']|int) %}<span class="stat-icon">⚽</span>{% endfor %}
+                        {% if joueur['CartonJaune']|int == 2 %}
+                            <span class="double-yellow" title="Double avertissement"><span class="card card-yellow"></span><span class="card card-red"></span></span>
+                        {% else %}
+                            {% for i in range(joueur['CartonJaune']|int) %}<span class="stat-icon">🟨</span>{% endfor %}
+                        {% endif %}
+                        {% for i in range(joueur['CartonRouge']|int) %}<span class="stat-icon">🟥</span>{% endfor %}
+                        {% for i in range(joueur['TAB_Marque']|int) %}<span class="stat-icon" title="Pénalty marqué">✅</span>{% endfor %}
+                        {% for i in range(joueur['TAB_Rate']|int) %}<span class="stat-icon" title="Pénalty raté">❌</span>{% endfor %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <h3 class="formation-title">
+        <i data-lucide="users" style="color: #64748b;"></i> REMPLAÇANTS
+    </h3>
+    <div class="formation-card">
+        <table class="formation-table">
+            <thead>
+                <tr>
+                    <th style="text-align: left; padding-left: 20px;">Joueur</th>
+                    <th>Minutes</th>
+                    <th>Événements</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for joueur in remplacants %}
+                <tr>
+                    <td class="player-name-cell">{{ joueur["Joueur"] }}</td>
+                    <td><span style="font-weight: 700;">{{ joueur["Minutes"] }}'</span></td>
+                    <td>
+                        {% for i in range(joueur['Buts']|int) %}<span class="stat-icon">⚽</span>{% endfor %}
+                        {% if joueur['CartonJaune']|int == 2 %}
+                            <span class="double-yellow" title="Double avertissement"><span class="card card-yellow"></span><span class="card card-red"></span></span>
+                        {% else %}
+                            {% for i in range(joueur['CartonJaune']|int) %}<span class="stat-icon">🟨</span>{% endfor %}
+                        {% endif %}
+                        {% for i in range(joueur['CartonRouge']|int) %}<span class="stat-icon">🟥</span>{% endfor %}
+                        {% for i in range(joueur['TAB_Marque']|int) %}<span class="stat-icon" title="Pénalty marqué">✅</span>{% endfor %}
+                        {% for i in range(joueur['TAB_Rate']|int) %}<span class="stat-icon" title="Pénalty raté">❌</span>{% endfor %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

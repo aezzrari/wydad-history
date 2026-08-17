@@ -1,0 +1,582 @@
+{% extends "base.html" %}
+
+{% block title %}Matchs - WAC History{% endblock %}
+
+{% block extra_css %}
+<style>
+    .matchs-container {
+        padding: 20px;
+        max-width: 1400px;
+        margin: 0 auto;
+    }
+
+    .page-title {
+        font-size: 1.8rem;
+        font-weight: 800;
+        margin-bottom: 5px;
+        color: var(--wac-black);
+    }
+
+    .page-subtitle {
+        color: var(--text-muted);
+        font-size: 0.9rem;
+        margin-bottom: 25px;
+    }
+
+    /* Filters Section */
+    .filters-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
+        margin-bottom: 25px;
+    }
+
+    @media (min-width: 768px) {
+        .filters-grid {
+            grid-template-columns: repeat(5, 1fr);
+        }
+    }
+
+    .filter-group {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+    }
+
+    .filter-group label {
+        font-size: 0.7rem;
+        font-weight: 800;
+        color: var(--wac-red);
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+
+    .filter-group select {
+        width: 100%;
+        background: #ffffff;
+        border: 1px solid var(--card-border);
+        color: var(--text-main);
+        padding: 10px;
+        border-radius: 12px;
+        font-size: 0.85rem;
+        cursor: pointer;
+    }
+
+    .reset-btn-container {
+        display: flex;
+        align-items: flex-end;
+    }
+
+    .reset-btn {
+        width: 100%;
+        height: 42px;
+        background: #f1f5f9;
+        border: 1px solid var(--card-border);
+        color: var(--text-main);
+        border-radius: 12px;
+        font-weight: 700;
+        cursor: pointer;
+        transition: background 0.2s;
+    }
+
+    /* Stats Banner */
+    .stats-banner {
+        display: flex;
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        gap: 12px;
+        margin-bottom: 30px;
+        padding-bottom: 10px;
+        scrollbar-width: none;
+    }
+
+    .stats-banner::-webkit-scrollbar {
+        display: none;
+    }
+
+    .stat-card-mini {
+        flex: 0 0 130px;
+        padding: 15px;
+        text-align: center;
+    }
+
+    .stat-card-mini .label {
+        font-size: 0.6rem;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        font-weight: 800;
+        margin-bottom: 5px;
+    }
+
+    .stat-card-mini .value {
+        font-size: 1.3rem;
+        font-weight: 800;
+        color: var(--wac-black);
+    }
+
+    .stat-card-mini .stat-icon {
+        width: 18px;
+        height: 18px;
+        color: #ffc107;
+        margin-bottom: 6px;
+    }
+
+    /* Table Section */
+    .table-wrapper {
+        width: 100%;
+        overflow-x: auto;
+        border-radius: 16px;
+        background: #ffffff;
+        border: 1px solid var(--card-border);
+        margin-bottom: 40px;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+    }
+
+    #matchesTable {
+        width: 100%;
+        border-collapse: collapse;
+        white-space: nowrap;
+        font-size: 0.9rem;
+    }
+
+    #matchesTable th {
+        padding: 15px;
+        background: #f8fafc;
+        text-align: left;
+        font-weight: 800;
+        color: var(--wac-black);
+        text-transform: uppercase;
+        font-size: 0.75rem;
+        letter-spacing: 1px;
+        border-bottom: 2px solid var(--card-border);
+    }
+
+    #matchesTable td {
+        padding: 15px;
+        border-bottom: 1px solid var(--card-border);
+        color: var(--text-main);
+    }
+
+    .hide-on-mobile {
+        display: table-cell;
+    }
+
+    @media (max-width: 768px) {
+        .hide-on-mobile {
+            display: none !important;
+        }
+
+        #matchesTable th,
+        #matchesTable td {
+            padding: 12px 10px;
+            font-size: 0.8rem;
+        }
+
+        .mobile-info {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .mobile-info .saison-jr {
+            font-size: 0.65rem;
+            color: var(--text-muted);
+            font-weight: 700;
+        }
+
+        .mobile-info .date-val {
+            font-weight: 800;
+            color: var(--wac-black);
+            font-size: 0.75rem;
+        }
+    }
+
+    #matchesTable tbody tr:hover {
+        background: #f8fafc;
+    }
+
+    .score-badge {
+        font-weight: 800;
+        padding: 4px 10px;
+        border-radius: 8px;
+        background: #f1f5f9;
+        color: var(--wac-black);
+    }
+
+    .formation-link {
+        color: var(--wac-red);
+        text-decoration: none;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        font-size: 0.8rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="matchs-container">
+    <h1 class="page-title">MATCHS</h1>
+    <p class="page-subtitle">Archives complètes des rencontres du club</p>
+
+    <!-- Filters -->
+    <div class="glass-card filters-grid">
+        <div class="filter-group">
+            <label>Saison</label>
+            <select id="filterSaison">
+                <option value="">Toutes les saisons</option>
+            </select>
+        </div>
+        <div class="filter-group">
+            <label>Compétition</label>
+            <select id="filterCompetition">
+                <option value="">Compétitions</option>
+            </select>
+        </div>
+        <div class="filter-group">
+            <label>Adversaire</label>
+            <select id="filterEquipe">
+                <option value="">Adversaires</option>
+            </select>
+        </div>
+        <div class="filter-group">
+            <label>Lieu</label>
+            <select id="filterLieu">
+                <option value="">Lieux</option>
+            </select>
+        </div>
+        <div class="reset-btn-container">
+            <button id="resetFilters" class="reset-btn">Reset</button>
+        </div>
+    </div>
+
+    <!-- Stats Banner -->
+    <div class="stats-banner">
+        <div class="glass-card stat-card-mini">
+            <div class="label">Total Matchs</div>
+            <div class="value" id="stat-total">0</div>
+        </div>
+        <div class="glass-card stat-card-mini">
+            <div class="label">Victoires</div>
+            <div class="value" id="stat-wins" style="color: #28a745;">0</div>
+        </div>
+        <div class="glass-card stat-card-mini">
+            <i class="stat-icon" data-lucide="percent"></i>
+            <div class="label">Victoire %</div>
+            <div class="value" id="stat-win-pct" style="color: #ffc107;">0%</div>
+        </div>
+        <div class="glass-card stat-card-mini">
+            <div class="label">Buts Marqués</div>
+            <div class="value" id="stat-gs">0</div>
+        </div>
+        <div class="glass-card stat-card-mini">
+            <div class="label">Clean Sheets</div>
+            <div class="value" id="stat-clean-sheets" style="color: #17a2b8;">0</div>
+        </div>
+        <div class="glass-card stat-card-mini">
+            <div class="label">Nuls</div>
+            <div class="value" id="stat-draws">0</div>
+        </div>
+        <div class="glass-card stat-card-mini">
+            <div class="label">Défaites</div>
+            <div class="value" id="stat-losses" style="color: var(--wac-red);">0</div>
+        </div>
+    </div>
+
+    <!-- Table -->
+    <div class="table-wrapper">
+        <table id="matchesTable">
+            <thead>
+                <tr>
+                    <th class="hide-on-mobile">Saison</th>
+                    <th class="hide-on-mobile">Date</th>
+                    <th class="hide-on-mobile">Journée</th>
+                    <!-- Mobile Header: Combine the 3 above -->
+                    <th style="display: none;" class="show-on-mobile-header">Match</th>
+
+                    <th class="hide-on-mobile">Compétition</th>
+                    <th>Adversaire</th>
+                    <th class="hide-on-mobile">Lieu</th>
+                    <th>Score</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <style>
+                @media (max-width: 768px) {
+                    .show-on-mobile-header {
+                        display: table-cell !important;
+                    }
+                }
+            </style>
+            <tbody>
+                {% for match in matches %}
+                <tr data-date="{{ match.DateMatch }}" data-season="{{ match.Saison }}" data-order="{{ loop.index0 }}">
+                    <td class="hide-on-mobile" style="font-weight: 700;">{{ match.Saison }}</td>
+                    <td class="hide-on-mobile" style="font-size: 0.85rem; color: #1e293b;">{{ match.DateMatch }}</td>
+                    <td class="hide-on-mobile" style="font-weight: 600;">{{ match.Journee }}</td>
+
+                    <!-- Combined Mobile Cell -->
+                    <td style="display: none;" class="show-on-mobile-cell">
+                        <div class="mobile-info">
+                            <span class="date-val">{{ match.DateMatch }}</span>
+                            <span class="saison-jr">{{ match.Saison }} - J.{{ match.Journee }}</span>
+                        </div>
+                    </td>
+                    <style>
+                        @media (max-width: 768px) {
+                            .show-on-mobile-cell {
+                                display: table-cell !important;
+                            }
+                        }
+                    </style>
+
+                    <td class="hide-on-mobile" style="color: var(--text-muted);">{{ match.Competition }}</td>
+                    <td style="font-weight: 800;">{{ match.Equipe }}</td>
+                    <td class="hide-on-mobile">
+                        <span
+                            style="font-size: 0.7rem; padding: 2px 8px; border-radius: 5px; background: rgba(0,0,0,0.05);">
+                            {{ match.Lieu }}
+                        </span>
+                    </td>
+                    <td><span class="score-badge">{{ match.Score }}</span></td>
+                    <td>
+                        <a href="/formation/{{ match.match_key }}" class="formation-link">
+                            <i data-lucide="layout" style="width: 16px;"></i>
+                        </a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const rawMatches = {{ matches | default ([]) | tojson | safe
+    }};
+    const filterSaison = document.getElementById('filterSaison');
+    const filterCompetition = document.getElementById('filterCompetition');
+    const filterEquipe = document.getElementById('filterEquipe');
+    const filterLieu = document.getElementById('filterLieu');
+    const resetFiltersBtn = document.getElementById('resetFilters');
+
+    const tableBody = document.querySelector('#matchesTable tbody');
+    const tableRows = document.querySelectorAll('#matchesTable tbody tr');
+
+    function seasonYear(value) {
+        const match = String(value || '').match(/\d{4}/);
+        return match ? parseInt(match[0], 10) : 0;
+    }
+
+    function rowSortValue(row) {
+        const dateValue = row.dataset.date || '';
+        const parsedDate = Date.parse(dateValue);
+        if (!Number.isNaN(parsedDate)) return parsedDate;
+        return seasonYear(row.dataset.season) * 1000;
+    }
+
+    function sortTableRows() {
+        Array.from(tableRows)
+            .sort((a, b) => {
+                const dateDiff = rowSortValue(b) - rowSortValue(a);
+                if (dateDiff !== 0) return dateDiff;
+                return Number(a.dataset.order || 0) - Number(b.dataset.order || 0);
+            })
+            .forEach(row => tableBody.appendChild(row));
+    }
+
+    function updateDropdowns() {
+        const currentFilters = {
+            Saison: filterSaison.value,
+            Competition: filterCompetition.value,
+            Equipe: filterEquipe.value,
+            Lieu: filterLieu.value
+        };
+
+        const filters = [
+            { id: 'Saison', el: filterSaison, label: 'All Saisons' },
+            { id: 'Competition', el: filterCompetition, label: 'All Competitions' },
+            { id: 'Equipe', el: filterEquipe, label: 'All Equipes' },
+            { id: 'Lieu', el: filterLieu, label: 'All Lieux' }
+        ];
+
+        filters.forEach(f => {
+            const otherFilters = filters.filter(x => x.id !== f.id);
+            const availableOptions = new Set();
+
+            rawMatches.forEach(m => {
+                let matchAllOther = true;
+                otherFilters.forEach(of => {
+                    const val = currentFilters[of.id];
+                    if (val !== "" && String(m[of.id] || "") !== val) {
+                        matchAllOther = false;
+                    }
+                });
+                if (matchAllOther && m[f.id]) {
+                    availableOptions.add(String(m[f.id]));
+                }
+            });
+
+            const currentVal = f.el.value;
+            f.el.innerHTML = `<option value="">${f.label}</option>`;
+
+            let sortedOptions = Array.from(availableOptions).sort();
+            if (f.id === 'Saison') {
+                sortedOptions = sortedOptions.sort((a, b) => {
+                    const yearA = parseInt(String(a).match(/\d{4}/)?.[0] || '0', 10);
+                    const yearB = parseInt(String(b).match(/\d{4}/)?.[0] || '0', 10);
+                    if (yearA !== yearB) return yearB - yearA;
+                    return String(b).localeCompare(String(a));
+                });
+            }
+
+            sortedOptions.forEach(v => {
+                const opt = document.createElement('option');
+                opt.value = v; opt.textContent = v;
+                if (v === currentVal) opt.selected = true;
+                f.el.appendChild(opt);
+            });
+        });
+    }
+
+    // Initialize dropdowns
+    updateDropdowns();
+
+    // Function to color scores and update stats
+    function processAndColorTable() {
+        let total = 0, wins = 0, draws = 0, losses = 0, gs = 0, gc = 0, cleanSheets = 0;
+
+        tableRows.forEach(row => {
+            const cells = row.querySelectorAll('td');
+            // Target the score badge - it's in the second to last cell
+            const scoreCell = cells[cells.length - 2];
+            if (!scoreCell) return;
+
+            const scoreBadge = scoreCell.querySelector('.score-badge');
+            if (!scoreBadge) return;
+
+            const scoreStr = scoreBadge.textContent.trim();
+            let scoreToParse = scoreStr;
+            if (scoreStr.includes('(')) {
+                scoreToParse = scoreStr.split('(')[0].trim();
+            }
+            const parts = scoreToParse.split('-');
+
+            if (parts.length === 2) {
+                const s1 = parseInt(parts[0].trim(), 10);
+                const s2 = parseInt(parts[1].trim(), 10);
+
+                if (!isNaN(s1) && !isNaN(s2)) {
+                    const wScore = s1;
+                    const oScore = s2;
+
+                    let isTabWin = false;
+                    let isTabLoss = false;
+                    if (scoreStr.includes('(')) {
+                        const tabPart = scoreStr.split('(')[1].replace(')', '').trim();
+                        const tabScores = tabPart.split('-');
+                        if (tabScores.length === 2) {
+                            const t1 = parseInt(tabScores[0].trim(), 10);
+                            const t2 = parseInt(tabScores[1].trim(), 10);
+                            if (t1 > t2) isTabWin = true;
+                            else if (t1 < t2) isTabLoss = true;
+                        }
+                    }
+
+                    if (wScore > oScore || isTabWin) {
+                        scoreBadge.style.color = '#16a34a';
+                        scoreBadge.style.background = '#f0fdf4';
+                        scoreBadge.style.border = '1px solid #bbf7d0';
+                    } else if (wScore === oScore && !isTabWin && !isTabLoss) {
+                        scoreBadge.style.color = '#475569';
+                        scoreBadge.style.background = '#f8fafc';
+                        scoreBadge.style.border = '1px solid #e2e8f0';
+                    } else {
+                        scoreBadge.style.color = '#da0000';
+                        scoreBadge.style.background = '#fef2f2';
+                        scoreBadge.style.border = '1px solid #fecaca';
+                    }
+
+                    if (row.style.display !== 'none') {
+                        total++;
+                        gs += wScore;
+                        gc += oScore;
+                        if (wScore > oScore || isTabWin) wins++;
+                        else if (wScore === oScore && !isTabLoss) draws++;
+                        else losses++;
+                        if (oScore === 0) cleanSheets++;
+                    }
+                }
+            } else if (row.style.display !== 'none') {
+                total++;
+            }
+        });
+
+        document.getElementById('stat-total').textContent = total;
+        document.getElementById('stat-wins').textContent = wins;
+        document.getElementById('stat-draws').textContent = draws;
+        document.getElementById('stat-losses').textContent = losses;
+        document.getElementById('stat-gs').textContent = gs;
+
+        const winPct = total > 0 ? ((wins / total) * 100).toFixed(1) + '%' : '0%';
+        document.getElementById('stat-win-pct').textContent = winPct;
+        document.getElementById('stat-clean-sheets').textContent = cleanSheets;
+    }
+
+    function handleFilterChange() {
+        const saisonValue = filterSaison.value;
+        const compValue = filterCompetition.value;
+        const equipeValue = filterEquipe.value;
+        const lieuValue = filterLieu.value;
+
+        // Update dropdowns options based on current selections
+        updateDropdowns();
+
+        tableRows.forEach(row => {
+            const cells = row.querySelectorAll('td');
+            if (cells.length > 0) {
+                // Logic to extract values from combined or hidden cells
+                const textSaison = cells[0].textContent.trim();
+                const textComp = cells[4].textContent.trim();
+                const textEquipe = cells[5].textContent.trim();
+                const textLieu = cells[6].textContent.trim();
+
+                const matchSaison = saisonValue === "" || textSaison === saisonValue;
+                const matchComp = compValue === "" || textComp === compValue;
+                const matchEquipeDropdown = equipeValue === "" || textEquipe === equipeValue;
+                const matchLieu = lieuValue === "" || textLieu === lieuValue;
+
+                if (matchSaison && matchComp && matchEquipeDropdown && matchLieu) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            }
+        });
+
+        sortTableRows();
+        processAndColorTable();
+    }
+
+    [filterSaison, filterCompetition, filterEquipe, filterLieu].forEach(el => {
+        el.addEventListener('change', handleFilterChange);
+    });
+
+    resetFiltersBtn.addEventListener('click', function () {
+        filterSaison.value = '';
+        filterCompetition.value = '';
+        filterEquipe.value = '';
+        filterLieu.value = '';
+        handleFilterChange();
+    });
+
+    sortTableRows();
+    // Initial setup
+    handleFilterChange();
+    });
+</script>
+{% endblock %}

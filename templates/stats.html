@@ -1,0 +1,678 @@
+{% extends "base.html" %}
+
+{% block title %}Analyse - WAC History{% endblock %}
+
+{% block extra_css %}
+<style>
+    .stats-container {
+        padding: 20px;
+        max-width: 1400px;
+        margin: 0 auto;
+    }
+
+    .page-title {
+        font-size: 1.8rem;
+        font-weight: 800;
+        margin-bottom: 5px;
+        color: var(--wac-black);
+    }
+
+    .page-subtitle {
+        color: var(--text-muted);
+        font-size: 0.9rem;
+        margin-bottom: 25px;
+    }
+
+    /* Filters Section */
+    .filters-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
+        margin-bottom: 25px;
+    }
+
+    @media (min-width: 768px) {
+        .filters-grid {
+            grid-template-columns: repeat(5, 1fr);
+        }
+    }
+
+    .filter-group {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+    }
+
+    .filter-group label {
+        font-size: 0.7rem;
+        font-weight: 800;
+        color: var(--wac-red);
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+
+    .filter-group select {
+        width: 100%;
+        background: #ffffff;
+        border: 1px solid var(--card-border);
+        color: var(--text-main);
+        padding: 10px;
+        border-radius: 12px;
+        font-size: 0.85rem;
+        cursor: pointer;
+    }
+
+    .reset-btn-container {
+        display: flex;
+        align-items: flex-end;
+    }
+
+    .reset-btn {
+        width: 100%;
+        height: 42px;
+        background: #f1f5f9;
+        border: 1px solid var(--card-border);
+        color: var(--text-main);
+        border-radius: 12px;
+        font-weight: 700;
+        cursor: pointer;
+        transition: background 0.2s;
+    }
+
+    /* Stats Grid */
+    .stats-summary-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
+        margin-bottom: 30px;
+    }
+
+    @media (min-width: 768px) {
+        .stats-summary-grid {
+            grid-template-columns: repeat(4, 1fr);
+        }
+    }
+
+    .stat-card-mini {
+        padding: 15px;
+        text-align: center;
+    }
+
+    .stat-card-mini .label {
+        font-size: 0.65rem;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        font-weight: 800;
+        margin-bottom: 5px;
+    }
+
+    .stat-card-mini .value {
+        font-size: 1.5rem;
+        font-weight: 800;
+        color: var(--wac-black);
+    }
+
+    .stat-card-mini .stat-icon {
+        width: 20px;
+        height: 20px;
+        color: var(--wac-black);
+        margin-bottom: 6px;
+    }
+
+    /* Charts Section */
+    .charts-container {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 20px;
+        margin-bottom: 40px;
+    }
+
+    @media (min-width: 1024px) {
+        .charts-container {
+            grid-template-columns: 1fr 1fr;
+        }
+    }
+
+    .chart-card {
+        padding: 20px;
+    }
+
+    .chart-card h3 {
+        font-size: 1rem;
+        font-weight: 800;
+        margin-bottom: 20px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        color: var(--wac-black);
+    }
+
+    .canvas-wrapper {
+        position: relative;
+        height: 300px;
+        width: 100%;
+    }
+
+    .standings-card {
+        display: none;
+        padding: 20px;
+        margin-bottom: 30px;
+    }
+
+    .standings-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        margin-bottom: 16px;
+    }
+
+    .standings-title {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin: 0;
+        font-size: 1rem;
+        color: var(--wac-black);
+    }
+
+    .standings-title i {
+        color: var(--wac-red);
+        width: 20px;
+        height: 20px;
+    }
+
+    .standings-meta {
+        color: var(--text-muted);
+        font-size: 0.85rem;
+        font-weight: 700;
+        text-align: right;
+    }
+
+    .standings-table-wrap {
+        overflow-x: auto;
+    }
+
+    .standings-table {
+        width: 100%;
+        border-collapse: collapse;
+        min-width: 720px;
+        font-size: 0.84rem;
+    }
+
+    .standings-table th,
+    .standings-table td {
+        padding: 10px 8px;
+        border-bottom: 1px solid var(--card-border);
+        text-align: center;
+        white-space: nowrap;
+    }
+
+    .standings-table th:nth-child(2),
+    .standings-table td:nth-child(2) {
+        text-align: left;
+        min-width: 220px;
+    }
+
+    .standings-table th {
+        color: var(--text-muted);
+        font-size: 0.68rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .standings-table tr.wac-row {
+        background: rgba(218, 0, 0, 0.08);
+        color: var(--wac-black);
+        font-weight: 800;
+    }
+
+    .standings-status {
+        color: var(--wac-red);
+        font-size: 0.75rem;
+        font-weight: 800;
+    }
+
+    .standings-trigger-card {
+        display: none;
+        cursor: pointer;
+    }
+
+    .standings-trigger-card i {
+        color: var(--wac-red);
+        width: 20px;
+        height: 20px;
+        margin-bottom: 6px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="stats-container">
+    <h1 class="page-title">ANALYSE</h1>
+    <p class="page-subtitle">Statistiques détaillées et performances de l'équipe</p>
+
+    <!-- Filters -->
+    <div class="glass-card filters-grid">
+        <div class="filter-group">
+            <label>Saison</label>
+            <select id="filterSaison">
+                <option value="">Toutes les saisons</option>
+            </select>
+        </div>
+        <div class="filter-group">
+            <label>Compétition</label>
+            <select id="filterCompetition">
+                <option value="">Compétitions</option>
+            </select>
+        </div>
+        <div class="filter-group">
+            <label>Adversaire</label>
+            <select id="filterEquipe">
+                <option value="">Adversaires</option>
+            </select>
+        </div>
+        <div class="filter-group">
+            <label>Lieu</label>
+            <select id="filterLieu">
+                <option value="">Lieux</option>
+            </select>
+        </div>
+        <div class="reset-btn-container">
+            <button id="resetFilters" class="reset-btn">Réinitialiser</button>
+        </div>
+    </div>
+
+    <!-- Summary -->
+    <div class="stats-summary-grid">
+        <div class="glass-card stat-card-mini">
+            <div class="label">Total Matchs</div>
+            <div class="value" id="stat-total">0</div>
+        </div>
+        <div class="glass-card stat-card-mini">
+            <div class="label">Victoires</div>
+            <div class="value" id="stat-wins" style="color: #16a34a;">0</div>
+        </div>
+        <div class="glass-card stat-card-mini">
+            <div class="label">Nuls</div>
+            <div class="value" id="stat-draws" style="color: #ca8a04;">0</div>
+        </div>
+        <div class="glass-card stat-card-mini">
+            <div class="label">Défaites</div>
+            <div class="value" id="stat-losses" style="color: var(--wac-red);">0</div>
+        </div>
+        <div class="glass-card stat-card-mini">
+            <div class="label">Buts Marqués</div>
+            <div class="value" id="stat-gs">0</div>
+        </div>
+        <div class="glass-card stat-card-mini">
+            <div class="label">Buts Encaissés</div>
+            <div class="value" id="stat-gc" style="color: #64748b;">0</div>
+        </div>
+        <div class="glass-card stat-card-mini">
+            <div class="label">Clean Sheets</div>
+            <div class="value" id="stat-cs" style="color: #0891b2;">0</div>
+        </div>
+        <div class="glass-card stat-card-mini">
+            <i class="stat-icon" data-lucide="percent"></i>
+            <div class="label">Efficacité</div>
+            <div class="value" id="stat-win-pct">0%</div>
+        </div>
+        <button class="glass-card stat-card-mini standings-trigger-card" id="standingsTrigger" type="button">
+            <i data-lucide="list-ordered"></i>
+            <div class="label">Classement</div>
+            <div class="value" id="stat-ranking">-</div>
+        </button>
+    </div>
+
+    <div class="glass-card standings-card" id="botolaStandingsCard">
+        <div class="standings-header">
+            <h3 class="standings-title">
+                <i data-lucide="list-ordered"></i>
+                Classement final Botola
+            </h3>
+            <div class="standings-meta" id="botolaStandingsMeta"></div>
+        </div>
+        <div class="standings-table-wrap">
+            <table class="standings-table">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Club</th>
+                        <th>MJ</th>
+                        <th>G</th>
+                        <th>N</th>
+                        <th>P</th>
+                        <th>BP</th>
+                        <th>BC</th>
+                        <th>Diff</th>
+                        <th>Pts</th>
+                        <th>Statut</th>
+                    </tr>
+                </thead>
+                <tbody id="botolaStandingsBody"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Charts -->
+    <div class="charts-container">
+        <div class="glass-card chart-card">
+            <h3><i data-lucide="pie-chart" style="color: var(--wac-red);"></i> Répartition des Résultats</h3>
+            <div class="canvas-wrapper">
+                <canvas id="resultsPieChart"></canvas>
+            </div>
+        </div>
+        <div class="glass-card chart-card">
+            <h3><i data-lucide="bar-chart-2" style="color: var(--wac-red);"></i> Bilan des Buts</h3>
+            <div class="canvas-wrapper">
+                <canvas id="goalsBarChart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
+
+<script>
+    Chart.register(ChartDataLabels);
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const rawMatches = {{ matches | default([]) | tojson | safe }};
+        const botolaSeasons = {{ botola_seasons | default([]) | tojson | safe }};
+        const botolaSeasonMap = new Map(botolaSeasons.map(season => [String(season.label), season]));
+        
+        const filterSaison = document.getElementById('filterSaison');
+        const filterCompetition = document.getElementById('filterCompetition');
+        const filterEquipe = document.getElementById('filterEquipe');
+        const filterLieu = document.getElementById('filterLieu');
+        const resetBtn = document.getElementById('resetFilters');
+        const standingsCard = document.getElementById('botolaStandingsCard');
+        const standingsBody = document.getElementById('botolaStandingsBody');
+        const standingsMeta = document.getElementById('botolaStandingsMeta');
+        const standingsTrigger = document.getElementById('standingsTrigger');
+        const statRanking = document.getElementById('stat-ranking');
+
+        let pieChart, barChart;
+
+        // Original unique sets for "Reset" or full initialization
+        const fullSets = { 
+            Saison: new Set(), 
+            Competition: new Set(), 
+            Equipe: new Set(), 
+            Lieu: new Set() 
+        };
+        rawMatches.forEach(m => {
+            if(m.Saison) fullSets.Saison.add(m.Saison);
+            if(m.Competition) fullSets.Competition.add(m.Competition);
+            if(m.Equipe) fullSets.Equipe.add(m.Equipe);
+            if(m.Lieu) fullSets.Lieu.add(m.Lieu);
+        });
+
+        function seasonSortValue(value) {
+            const match = String(value || "").match(/\d{4}/);
+            return match ? parseInt(match[0], 10) : 0;
+        }
+
+        function sortedOptions(values, id) {
+            const items = Array.from(values);
+            if (id === "Saison") {
+                return items.sort((a, b) => seasonSortValue(b) - seasonSortValue(a) || String(b).localeCompare(String(a)));
+            }
+            return items.sort((a, b) => String(a).localeCompare(String(b), "fr", { sensitivity: "base" }));
+        }
+
+        function updateDropdowns() {
+            const currentFilters = {
+                Saison: filterSaison.value,
+                Competition: filterCompetition.value,
+                Equipe: filterEquipe.value,
+                Lieu: filterLieu.value
+            };
+
+            const filters = [
+                { id: 'Saison', el: filterSaison, label: 'Toutes les saisons' },
+                { id: 'Competition', el: filterCompetition, label: 'Compétitions' },
+                { id: 'Equipe', el: filterEquipe, label: 'Adversaires' },
+                { id: 'Lieu', el: filterLieu, label: 'Lieux' }
+            ];
+
+            filters.forEach(f => {
+                const otherFilters = filters.filter(x => x.id !== f.id);
+                const availableOptions = new Set();
+
+                rawMatches.forEach(m => {
+                    let matchAllOther = true;
+                    otherFilters.forEach(of => {
+                        const val = currentFilters[of.id];
+                        // Note: Data keys in JS objects match CSV column names
+                        if (val !== "" && String(m[of.id]) !== val) {
+                            matchAllOther = false;
+                        }
+                    });
+                    if (matchAllOther && m[f.id]) {
+                        availableOptions.add(String(m[f.id]));
+                    }
+                });
+
+                // Preserve current value if still available, otherwise reset to ""
+                const currentVal = f.el.value;
+                f.el.innerHTML = `<option value="">${f.label}</option>`;
+                
+                sortedOptions(availableOptions, f.id).forEach(v => {
+                    const opt = document.createElement('option');
+                    opt.value = v; opt.textContent = v;
+                    if (v === currentVal) opt.selected = true;
+                    f.el.appendChild(opt);
+                });
+            });
+        }
+
+        function updateStats() {
+            const fS = filterSaison.value;
+            const fC = filterCompetition.value;
+            const fE = filterEquipe.value;
+            const fL = filterLieu.value;
+
+            // First, update the other dropdowns based on current selection
+            updateDropdowns();
+
+            let total = 0, wins = 0, draws = 0, losses = 0;
+            let gs = 0, gc = 0, cleanSheets = 0;
+
+            rawMatches.forEach(match => {
+                if ((fS === "" || String(match.Saison) === fS) &&
+                    (fC === "" || String(match.Competition) === fC) &&
+                    (fE === "" || String(match.Equipe) === fE) &&
+                    (fL === "" || String(match.Lieu) === fL)) {
+                    
+                    const scoreStr = match.Score;
+                    if (scoreStr) {
+                        const scoreText = String(scoreStr);
+                        const scoreToParse = scoreText.includes('(') ? scoreText.split('(')[0].trim() : scoreText;
+                        const parts = scoreToParse.split('-');
+                        if (parts.length === 2) {
+                            const wScore = parseInt(parts[0].trim(), 10);
+                            const oScore = parseInt(parts[1].trim(), 10);
+
+                            if (!isNaN(wScore) && !isNaN(oScore)) {
+                                let isTabWin = false;
+                                let isTabLoss = false;
+                                if (scoreText.includes('(')) {
+                                    const tabPart = scoreText.split('(')[1].replace(')', '').trim();
+                                    const tabScores = tabPart.split('-');
+                                    if (tabScores.length === 2) {
+                                        const t1 = parseInt(tabScores[0].trim(), 10);
+                                        const t2 = parseInt(tabScores[1].trim(), 10);
+                                        if (!isNaN(t1) && !isNaN(t2)) {
+                                            isTabWin = t1 > t2;
+                                            isTabLoss = t1 < t2;
+                                        }
+                                    }
+                                }
+
+                                total++;
+                                gs += wScore;
+                                gc += oScore;
+                                if (wScore > oScore || isTabWin) wins++;
+                                else if (wScore === oScore && !isTabLoss) draws++;
+                                else losses++;
+                                if (oScore === 0) cleanSheets++;
+                            }
+                        }
+                    }
+                }
+            });
+
+            // Update UI
+            document.getElementById('stat-total').textContent = total;
+            document.getElementById('stat-wins').textContent = wins;
+            document.getElementById('stat-draws').textContent = draws;
+            document.getElementById('stat-losses').textContent = losses;
+            document.getElementById('stat-gs').textContent = gs;
+            document.getElementById('stat-gc').textContent = gc;
+            document.getElementById('stat-cs').textContent = cleanSheets;
+            document.getElementById('stat-win-pct').textContent = total > 0 ? `${((wins / total) * 100).toFixed(1)}%` : "0%";
+
+            renderBotolaStandings(fS, fC);
+
+            // Charts
+            if (pieChart) pieChart.destroy();
+            if (barChart) barChart.destroy();
+
+            const commonOptions = {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    datalabels: {
+                        color: '#fff',
+                        font: { weight: 'bold', size: 14 },
+                        formatter: (value, ctx) => {
+                            if (value === 0) return null;
+                            if (ctx.chart.config.type === 'pie') {
+                                let sum = 0;
+                                let dataArr = ctx.chart.data.datasets[0].data;
+                                dataArr.map(data => { sum += data; });
+                                let percentage = (value * 100 / sum).toFixed(1) + "%";
+                                return value + " (" + percentage + ")";
+                            }
+                            return value;
+                        }
+                    }
+                }
+            };
+
+            const pieCtx = document.getElementById('resultsPieChart').getContext('2d');
+            pieChart = new Chart(pieCtx, {
+                type: 'pie',
+                data: {
+                    labels: ['Victoires', 'Nuls', 'Défaites'],
+                    datasets: [{
+                        data: [wins, draws, losses],
+                        backgroundColor: ['#28a745', '#6c757d', '#da0000']
+                    }]
+                },
+                options: commonOptions
+            });
+
+            const barCtx = document.getElementById('goalsBarChart').getContext('2d');
+            barChart = new Chart(barCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['Buts Marqués', 'Buts Encaissés'],
+                    datasets: [{
+                        data: [gs, gc],
+                        backgroundColor: ['#111111', '#da0000']
+                    }]
+                },
+                options: {
+                    ...commonOptions,
+                    plugins: {
+                        ...commonOptions.plugins,
+                        legend: { display: false },
+                        datalabels: { ...commonOptions.plugins.datalabels, anchor: 'end', align: 'top', color: '#333' }
+                    }
+                }
+            });
+        }
+
+        function renderBotolaStandings(seasonLabel, competitionLabel) {
+            const season = botolaSeasonMap.get(seasonLabel);
+            const isBotola = competitionLabel === "Botola";
+
+            if (!isBotola || !season || !season.table || season.table.length === 0) {
+                standingsCard.style.display = "none";
+                standingsTrigger.style.display = "none";
+                standingsBody.innerHTML = "";
+                standingsMeta.textContent = "";
+                statRanking.textContent = "-";
+                return;
+            }
+
+            standingsCard.style.display = "block";
+            const wac = season.wac || {};
+            standingsTrigger.style.display = wac.rank ? "block" : "none";
+            statRanking.textContent = wac.rank ? `${wac.rank}e` : "-";
+            const championCount = season.championTitleCount ? ` (${season.championTitleCount})` : "";
+            standingsMeta.textContent = wac.rank ? `WAC: ${wac.rank}e - ${wac.points} pts` : `${season.championDisplay || season.champion || ""}${championCount}`;
+            standingsBody.innerHTML = "";
+
+            season.table.forEach(row => {
+                const tr = document.createElement('tr');
+                if (row.code === "WAC" || String(row.club || "").includes("Wydad Athletic Club")) {
+                    tr.className = "wac-row";
+                }
+
+                const cells = [
+                    row.rank,
+                    `${row.clubDisplay || row.club || row.code}${row.championTitleCount ? ` (${row.championTitleCount})` : ""}`,
+                    row.played,
+                    row.won,
+                    row.drawn,
+                    row.lost,
+                    row.goalsFor,
+                    row.goalsAgainst,
+                    row.goalDifference,
+                    row.points,
+                    row.status || ""
+                ];
+
+                cells.forEach((value, index) => {
+                    const td = document.createElement('td');
+                    td.textContent = value ?? "";
+                    if (index === 10 && value) td.className = "standings-status";
+                    tr.appendChild(td);
+                });
+
+                standingsBody.appendChild(tr);
+            });
+
+            if (window.lucide) lucide.createIcons();
+        }
+
+        standingsTrigger.addEventListener('click', () => {
+            standingsCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        });
+
+        [filterSaison, filterCompetition, filterEquipe, filterLieu].forEach(el => {
+            el.addEventListener('change', () => {
+                updateStats();
+            });
+        });
+
+        resetBtn.addEventListener('click', () => {
+            filterSaison.value = ""; 
+            filterCompetition.value = ""; 
+            filterEquipe.value = ""; 
+            filterLieu.value = "";
+            updateStats();
+        });
+
+        // Initialize
+        updateStats();
+    });
+</script>
+{% endblock %}

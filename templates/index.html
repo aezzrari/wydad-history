@@ -1,0 +1,207 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - WAC History{% endblock %}
+
+{% block extra_css %}
+<style>
+    .hero-section {
+        padding: 40px 20px;
+        text-align: center;
+        background: linear-gradient(180deg, rgba(218, 0, 0, 0.1) 0%, transparent 100%);
+    }
+
+    .hero-title {
+        font-size: 2.5rem;
+        font-weight: 800;
+        margin-bottom: 10px;
+        background: linear-gradient(to right, #fff, var(--wac-red));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+
+    .hero-subtitle {
+        color: var(--text-muted);
+        font-size: 1.1rem;
+        max-width: 600px;
+        margin: 0 auto 30px;
+    }
+
+    .hero-actions {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 12px;
+        flex-wrap: wrap;
+    }
+
+    .whatsapp-share {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        background: #25d366;
+        color: #ffffff !important;
+        border: none;
+        padding: 12px 20px;
+        border-radius: 14px;
+        font-weight: 800;
+        text-decoration: none;
+        box-shadow: 0 5px 15px rgba(37, 211, 102, 0.25);
+        transition: transform 0.2s, background 0.2s;
+    }
+
+    .whatsapp-share:hover {
+        background: #1ebe5d;
+        color: #ffffff !important;
+        transform: translateY(-1px);
+    }
+
+    .whatsapp-share i {
+        width: 18px;
+        height: 18px;
+    }
+
+    .action-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 15px;
+        padding: 20px;
+    }
+
+    @media (min-width: 768px) {
+        .action-grid {
+            grid-template-columns: repeat(4, 1fr);
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+    }
+
+    .action-card {
+        text-decoration: none;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        height: 120px;
+        transition: transform 0.2s, background 0.2s;
+    }
+
+    .action-card i {
+        font-size: 2rem;
+        margin-bottom: 12px;
+        color: var(--wac-red);
+    }
+
+    .action-card span {
+        color: var(--text-main);
+        font-weight: 700;
+        font-size: 0.9rem;
+    }
+
+    .action-card:active {
+        transform: scale(0.95);
+        background: rgba(255, 255, 255, 0.1);
+    }
+
+    .stats-preview {
+        padding: 20px;
+    }
+
+    .section-label {
+        font-size: 0.8rem;
+        font-weight: 800;
+        color: var(--wac-red);
+        text-transform: uppercase;
+        letter-spacing: 2px;
+        margin-bottom: 15px;
+        padding-left: 10px;
+    }
+
+    .recent-match-card {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+    }
+
+    .team-badge {
+        width: 50px;
+        height: 50px;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 800;
+        color: var(--wac-red);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="hero-section">
+    <h1 class="hero-title">WAC HISTORY</h1>
+    <p class="hero-subtitle">Explorez l'héritage légendaire du Wydad Athletic Club, des premiers matchs aux titres historiques.</p>
+    <div class="hero-actions">
+        <a href="/stats" class="btn-premium">Voir les Stats Globales</a>
+        <a class="whatsapp-share" href="https://wa.me/?text=WAC%20History%20-%20archives%2C%20matchs%2C%20joueurs%2C%20stats%20et%20palmares%20du%20Wydad%20AC%20%3A%20https%3A%2F%2Faezzrari.pythonanywhere.com" target="_blank" rel="noopener">
+            <i data-lucide="send"></i>
+            Partager
+        </a>
+    </div>
+</div>
+
+<div class="stats-preview">
+    <div class="section-label">Navigation Rapide</div>
+    <div class="action-grid">
+        <a href="/matchs" class="glass-card action-card">
+            <i data-lucide="calendar"></i>
+            <span>Matchs</span>
+        </a>
+        <a href="/players" class="glass-card action-card">
+            <i data-lucide="users"></i>
+            <span>Joueurs</span>
+        </a>
+        <a href="/stats" class="glass-card action-card">
+            <i data-lucide="pie-chart"></i>
+            <span>Analyses</span>
+        </a>
+        <a href="/trophies" class="glass-card action-card">
+            <i data-lucide="trophy"></i>
+            <span>Palmarès</span>
+        </a>
+    </div>
+</div>
+
+<div class="stats-preview">
+    <div class="section-label">Dernière Mise à jour</div>
+    {% if latest_match %}
+    <div class="glass-card recent-match-card">
+        <div class="team-badge">WAC</div>
+        <div style="flex: 1;">
+            <div style="font-weight: 800; font-size: 1.1rem;">Wydad AC vs {{ latest_match.equipe }}</div>
+            <div style="color: var(--text-muted); font-size: 0.8rem;">
+                {{ latest_match.competition }} • J{{ latest_match.journee }} • {{ latest_match.date }}
+                {% if latest_match.lieu %} • {{ latest_match.lieu }}{% endif %}
+            </div>
+        </div>
+        <div style="font-weight: 800; font-size: 1.2rem; color: var(--wac-red);">{{ latest_match.score }}</div>
+    </div>
+    {% else %}
+    <div class="glass-card recent-match-card">
+        <div class="team-badge">WAC</div>
+        <div style="flex: 1;">
+            <div style="font-weight: 800; font-size: 1.1rem;">Aucun match enregistré</div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<div style="padding: 20px; margin-bottom: 40px;">
+    <div class="glass-card" style="background: linear-gradient(135deg, rgba(218,0,0,0.1) 0%, transparent 100%);">
+        <h3 style="display: flex; align-items: center; gap: 10px;">
+            <i data-lucide="shield-check" style="color: var(--wac-red);"></i>
+            Authenticité
+        </h3>
+        <p style="color: var(--text-muted); font-size: 0.9rem;">Toutes les données sont extraites des archives officielles et des feuilles de match historiques.</p>
+    </div>
+</div>
+{% endblock %}

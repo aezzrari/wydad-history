@@ -1,0 +1,16 @@
+__pycache__/
+*.py[cod]
+
+*.log
+
+deploy_*.zip
+deploy_csv_only/
+deploy_pythonanywhere_files/
+
+scratch/
+
+.env
+.venv/
+venv/
+
+data/visit_log.csv

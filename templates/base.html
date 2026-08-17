@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#111111">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="WAC History">
+    <meta name="description" content="WAC History rassemble les archives du Wydad Athletic Club : matchs, joueurs, statistiques, formations, palmar&egrave;s et grands moments de l'histoire du WAC.">
+    <meta name="keywords" content="Wydad, WAC, Wydad Athletic Club, WAC History, Botola, Champions League CAF, football marocain, archives Wydad, statistiques Wydad">
+    <meta name="author" content="WAC History">
+    <meta property="og:title" content="WAC History - Archives du Wydad Athletic Club">
+    <meta property="og:description" content="Explorez l'histoire du Wydad AC : matchs, joueurs, stats, formations et palmar&egrave;s.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://aezzrari.pythonanywhere.com">
+    <meta name="twitter:card" content="summary">
+    
+    <title>{% block title %}WAC History{% endblock %}</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Inter:wght@400;700&display=swap" rel="stylesheet">
+    
+    <!-- PWA (To be enabled with manifest.json) -->
+    <!-- <link rel="manifest" href="/static/manifest.json"> -->
+
+    <style>
+        :root {
+            --wac-red: #da0000;
+            --wac-black: #111111;
+            --bg-light: #eceff1;
+            --card-bg: #ffffff;
+            --card-border: #d1d5db;
+            --text-main: #1e293b;
+            --text-muted: #475569;
+            --safe-bottom: env(safe-area-inset-bottom);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: 'Inter', 'Outfit', sans-serif;
+            background-color: var(--bg-light);
+            color: var(--text-main);
+            line-height: 1.6;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            padding-bottom: calc(70px + var(--safe-bottom));
+        }
+
+        /* Header */
+        .header {
+            background-color: var(--wac-black);
+            padding: 1rem 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .logo {
+            font-size: 1.4rem;
+            font-weight: 800;
+            text-decoration: none;
+            color: #ffffff;
+            letter-spacing: -0.5px;
+        }
+
+        .logo span {
+            color: var(--wac-red);
+        }
+
+        .desktop-nav {
+            display: flex;
+            gap: 1.5rem;
+        }
+
+        .desktop-nav a, .desktop-nav a:visited {
+            text-decoration: none;
+            color: #ffffff !important;
+            font-weight: 700;
+            font-size: 0.9rem;
+            transition: color 0.2s;
+            text-transform: uppercase;
+        }
+
+        .desktop-nav a:hover {
+            color: var(--wac-red) !important;
+        }
+
+        @media (max-width: 768px) {
+            .desktop-nav { display: none; }
+        }
+
+        /* Global Components */
+        .glass-card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 16px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        /* Bottom Nav (Mobile) */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: #ffffff;
+            border-top: 1px solid var(--card-border);
+            display: none;
+            justify-content: space-around;
+            padding: 10px 10px calc(10px + var(--safe-bottom));
+            z-index: 1000;
+            box-shadow: 0 -2px 15px rgba(0,0,0,0.05);
+        }
+
+        @media (max-width: 768px) {
+            .bottom-nav { display: flex; }
+        }
+
+        .nav-item, .nav-item:visited {
+            text-decoration: none;
+            color: var(--text-muted) !important;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            font-size: 0.65rem;
+            font-weight: 700;
+        }
+
+        .nav-item.active {
+            color: var(--wac-red) !important;
+        }
+
+        .mobile-more {
+            position: fixed;
+            right: 10px;
+            bottom: calc(72px + var(--safe-bottom));
+            display: none;
+            min-width: 150px;
+            background: #ffffff;
+            border: 1px solid var(--card-border);
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+            z-index: 1001;
+            overflow: hidden;
+        }
+
+        .mobile-more.open {
+            display: block;
+        }
+
+        .mobile-more a {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 14px;
+            color: var(--text-main);
+            text-decoration: none;
+            font-size: 0.82rem;
+            font-weight: 800;
+        }
+
+        .mobile-more a.active {
+            color: var(--wac-red);
+        }
+
+        .mobile-more i {
+            width: 17px;
+            height: 17px;
+        }
+
+        /* Glass Cards */
+        .glass-card {
+            background: var(--card-bg);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--card-border);
+            border-radius: 20px;
+            padding: 20px;
+            margin: 10px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        /* Standard Section Headers */
+        h1, h2, h3 {
+            margin-bottom: 1rem;
+            font-weight: 800;
+        }
+
+        /* Button Premium */
+        .btn-premium {
+            background: linear-gradient(135deg, var(--wac-red) 0%, var(--wac-dark-red, #a30000) 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: 0 5px 15px rgba(218, 0, 0, 0.3);
+            transition: transform 0.2s;
+        }
+
+        .btn-premium:active {
+            transform: scale(0.98);
+        }
+
+        /* Hide desktop nav on mobile */
+        @media (max-width: 768px) {
+            .desktop-nav { display: none; }
+            .header { padding: 1rem; }
+        }
+
+        /* Hide bottom nav on desktop */
+        @media (min-width: 769px) {
+            .bottom-nav { display: none; }
+        }
+
+        /* Animation */
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .animate-up {
+            animation: slideUp 0.6s ease-out forwards;
+        }
+
+        /* Specific styles for lists/tables to fit dark mode */
+        table { color: var(--text-main); }
+        select, input { background: #1a1a1a; color: white; border: 1px solid var(--card-border); border-radius: 10px; padding: 10px; }
+    </style>
+    <!-- Lucide Icons for premium mobile look -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    {% block extra_css %}{% endblock %}
+</head>
+
+<body>
+
+    <header class="header">
+        <a href="/" class="logo">WAC <span>History</span></a>
+        <nav class="desktop-nav">
+            <a href="/" class="{% if request.path == '/' %}active{% endif %}">Accueil</a>
+            <a href="/matchs" class="{% if request.path == '/matchs' %}active{% endif %}">Matchs</a>
+            <a href="/players" class="{% if request.path == '/players' %}active{% endif %}">Joueurs</a>
+            <a href="/stats" class="{% if request.path == '/stats' %}active{% endif %}">Stats</a>
+            <a href="/admin" style="color: #ffd700;">Admin</a>
+        </nav>
+        <div class="desktop-nav" style="gap: 10px;">
+            <a href="/legends" class="{% if request.path == '/legends' %}active{% endif %}">Légendes</a>
+            <a href="/trophies" class="{% if request.path == '/trophies' %}active{% endif %}">Palmarès</a>
+        </div>
+    </header>
+
+    <main>
+        <div class="animate-up">
+            {% block content %}{% endblock %}
+        </div>
+    </main>
+
+    <!-- Bottom Mobile Navigation -->
+    <div class="mobile-more" id="mobileMoreMenu">
+        <a href="/legends" class="{% if request.path == '/legends' %}active{% endif %}">
+            <i data-lucide="star"></i>
+            <span>Légendes</span>
+        </a>
+        <a href="/trophies" class="{% if request.path == '/trophies' %}active{% endif %}">
+            <i data-lucide="trophy"></i>
+            <span>Palmarès</span>
+        </a>
+    </div>
+
+    <nav class="bottom-nav">
+        <a href="/" class="nav-item {% if request.path == '/' %}active{% endif %}">
+            <i data-lucide="home"></i>
+            <span>Home</span>
+        </a>
+        <a href="/matchs" class="nav-item {% if request.path == '/matchs' %}active{% endif %}">
+            <i data-lucide="calendar"></i>
+            <span>Matchs</span>
+        </a>
+        <a href="/players" class="nav-item {% if request.path == '/players' %}active{% endif %}">
+            <i data-lucide="users"></i>
+            <span>Joueurs</span>
+        </a>
+        <a href="/stats" class="nav-item {% if request.path == '/stats' %}active{% endif %}">
+            <i data-lucide="bar-chart-3"></i>
+            <span>Stats</span>
+        </a>
+        <button class="nav-item {% if request.path in ['/legends', '/trophies'] %}active{% endif %}" id="mobileMoreToggle" type="button">
+            <i data-lucide="more-horizontal"></i>
+            <span>Plus</span>
+        </button>
+        <a href="/admin" class="nav-item {% if request.path == '/admin' %}active{% endif %}">
+            <i data-lucide="settings"></i>
+            <span>Admin</span>
+        </a>
+    </nav>
+
+    <script>
+        // Initialize icons
+        lucide.createIcons();
+
+        // Safe area handle for iOS
+        function setViewportHeight() {
+            let vh = window.innerHeight * 0.01;
+            document.documentElement.style.setProperty('--vh', `${vh}px`);
+        }
+        window.addEventListener('resize', setViewportHeight);
+        setViewportHeight();
+
+        const mobileMoreToggle = document.getElementById('mobileMoreToggle');
+        const mobileMoreMenu = document.getElementById('mobileMoreMenu');
+        if (mobileMoreToggle && mobileMoreMenu) {
+            mobileMoreToggle.addEventListener('click', () => {
+                mobileMoreMenu.classList.toggle('open');
+            });
+            document.addEventListener('click', (event) => {
+                if (!mobileMoreMenu.contains(event.target) && !mobileMoreToggle.contains(event.target)) {
+                    mobileMoreMenu.classList.remove('open');
+                }
+            });
+        }
+    </script>
+    
+    {% block extra_js %}{% endblock %}
+</body>
+
+</html>

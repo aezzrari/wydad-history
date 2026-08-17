@@ -1,0 +1,626 @@
+{% extends "base.html" %}
+
+{% block content %}
+<style>
+    .players-container {
+        padding: 20px;
+        max-width: 1400px;
+        margin: 0 auto;
+    }
+
+    .page-title {
+        font-size: 1.8rem;
+        font-weight: 800;
+        margin-bottom: 5px;
+        color: var(--wac-black);
+    }
+
+    .page-subtitle {
+        color: var(--text-muted);
+        font-size: 0.9rem;
+        margin-bottom: 25px;
+    }
+
+    /* Filters Section */
+    .filters-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
+        margin-bottom: 25px;
+        background: #fff;
+        padding: 20px;
+        border-radius: 20px;
+        border: 1px solid var(--card-border);
+    }
+
+    @media (min-width: 768px) {
+        .filters-grid {
+            grid-template-columns: repeat(3, 1fr);
+        }
+    }
+
+    .filter-group {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+    }
+
+    .filter-group.full {
+        grid-column: span 2;
+    }
+
+    @media (min-width: 768px) {
+        .filter-group.full { grid-column: span 1; }
+    }
+
+    .filter-group label {
+        font-size: 0.7rem;
+        font-weight: 800;
+        color: var(--wac-red);
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+
+    .filter-group select, .filter-group input {
+        width: 100%;
+        background: #ffffff;
+        border: 1px solid var(--card-border);
+        color: var(--text-main);
+        padding: 10px;
+        border-radius: 12px;
+        font-size: 0.85rem;
+    }
+
+    /* Tabs Section */
+    .nav-tabs-custom {
+        display: flex;
+        overflow-x: auto;
+        gap: 10px;
+        margin-bottom: 25px;
+        padding-bottom: 5px;
+        scrollbar-width: none;
+    }
+    .nav-tabs-custom::-webkit-scrollbar { display: none; }
+
+    .tab-btn {
+        flex: 0 0 auto;
+        padding: 10px 20px;
+        background: #ffffff;
+        border: 1px solid var(--card-border);
+        color: var(--text-muted);
+        border-radius: 14px;
+        font-weight: 700;
+        cursor: pointer;
+        font-size: 0.85rem;
+        transition: all 0.3s;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .tab-btn.active {
+        background: var(--wac-red);
+        color: white;
+        border-color: var(--wac-red);
+        box-shadow: 0 4px 10px rgba(218, 0, 0, 0.2);
+    }
+
+    /* Stats Cards */
+    .stats-card {
+        margin-bottom: 30px;
+        display: block;
+        background: #ffffff;
+        border: 1px solid var(--card-border);
+        border-radius: 20px;
+        overflow: hidden;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+    }
+
+    .stats-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 15px 20px;
+        border-bottom: 1px solid var(--card-border);
+        background: #f8fafc;
+    }
+
+    .stats-header h2 {
+        font-size: 1rem;
+        font-weight: 800;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin: 0;
+        color: var(--wac-black);
+    }
+
+    .table-wrapper {
+        width: 100%;
+        overflow-x: auto;
+    }
+
+    .stats-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.9rem;
+    }
+
+    .stats-table th {
+        padding: 15px;
+        background: #ffffff;
+        text-align: center;
+        font-weight: 800;
+        color: var(--wac-black);
+        text-transform: uppercase;
+        font-size: 0.7rem;
+        border-bottom: 2px solid var(--card-border);
+    }
+
+    .stats-table td {
+        padding: 15px;
+        border-bottom: 1px solid var(--card-border);
+        text-align: center;
+        color: var(--text-main);
+    }
+
+    .stats-table tr {
+        cursor: pointer;
+        transition: background 0.2s;
+    }
+
+    .stats-table tr:hover {
+        background: #f1f5f9 !important;
+    }
+
+    .player-name-cell {
+        text-align: left !important;
+        padding-left: 20px !important;
+        font-weight: 700;
+        color: var(--wac-red); /* Indicate it's clickable */
+    }
+
+    .badge-premium {
+        background: #f1f5f9;
+        padding: 4px 8px;
+        border-radius: 6px;
+        font-weight: 800;
+        color: var(--wac-black);
+    }
+    
+    .close-icon {
+        cursor: pointer;
+        font-size: 1.2rem;
+        color: var(--text-muted);
+    }
+</style>
+
+<div class="players-container">
+    <h1 class="page-title">JOUEURS</h1>
+    <p class="page-subtitle">Performances individuelles et statistiques par joueur</p>
+
+    <!-- Filters -->
+    <div class="glass-card filters-grid">
+        <div class="filter-group full">
+            <label>Rechercher un joueur</label>
+            <input type="text" id="filterPlayer" list="playersList" placeholder="Ex: Moussa N'Daw">
+            <datalist id="playersList"></datalist>
+        </div>
+        <div class="filter-group">
+            <label>Saison</label>
+            <select id="filterSaison">
+                <option value="">Toutes les saisons</option>
+            </select>
+        </div>
+        <div class="filter-group">
+            <label>Compétition</label>
+            <select id="filterCompetition">
+                <option value="">Compétitions</option>
+            </select>
+        </div>
+        <div class="filter-group">
+            <label>Adversaire</label>
+            <select id="filterEquipe">
+                <option value="">Adversaires</option>
+            </select>
+        </div>
+        <div class="filter-group">
+            <label>Lieu</label>
+            <select id="filterLieu">
+                <option value="">Lieux</option>
+            </select>
+        </div>
+        <div style="display: flex; align-items: flex-end;">
+            <button id="resetFilters" class="btn-premium" style="width: 100%; height: 42px; border-radius: 12px; font-size: 0.8rem; padding: 0;">Reset</button>
+        </div>
+    </div>
+
+    <!-- Navigation Tabs -->
+    <div class="nav-tabs-custom">
+        <button class="tab-btn active" data-target="buteurs-card">
+            <i data-lucide="goal"></i> Buteurs
+        </button>
+        <button class="tab-btn active" data-target="capes-card">
+            <i data-lucide="user-check"></i> Présences
+        </button>
+        <button class="tab-btn active" data-target="seasonal-card" id="btn-seasonal" style="display: none;">
+            <i data-lucide="calendar"></i> Par Saison
+        </button>
+        <button class="tab-btn active" data-target="details-card">
+            <i data-lucide="list"></i> Détails
+        </button>
+    </div>
+
+    <!-- Seasonal Stats Card (Hidden by default, shown when a player is selected) -->
+    <div id="seasonal-card" class="stats-card" style="display: none; border-left: 4px solid var(--wac-red);">
+        <div class="stats-header">
+            <h2><i data-lucide="history" style="color: var(--wac-red);"></i> Historique par Saison</h2>
+            <span class="close-icon" onclick="toggleCard('seasonal-card', false)">&times;</span>
+        </div>
+        <div class="table-wrapper">
+            <table class="stats-table">
+                <thead>
+                    <tr>
+                        <th style="text-align: left; padding-left: 20px;">Saison</th>
+                        <th>Matchs</th>
+                        <th>Buts</th>
+                        <th>CJ</th>
+                        <th>CR</th>
+                        <th>Min.</th>
+                        <th>TAB</th>
+                    </tr>
+                </thead>
+                <tbody id="seasonal-body"></tbody>
+                <tfoot id="seasonal-foot" style="background: #f8fafc; font-weight: 800; border-top: 2px solid var(--card-border);"></tfoot>
+            </table>
+        </div>
+    </div>
+
+    <!-- Cards Section -->
+    <div id="buteurs-card" class="stats-card">
+        <div class="stats-header">
+            <h2><i data-lucide="award" style="color: var(--wac-red);"></i> Meilleurs Buteurs</h2>
+            <span class="close-icon" onclick="toggleCard('buteurs-card', false)">&times;</span>
+        </div>
+        <div class="table-wrapper">
+            <table class="stats-table">
+                <thead>
+                    <tr>
+                        <th style="text-align: left; padding-left: 20px;">Joueur</th>
+                        <th>Buts</th>
+                    </tr>
+                </thead>
+                <tbody id="buteurs-body"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <div id="capes-card" class="stats-card">
+        <div class="stats-header">
+            <h2><i data-lucide="users" style="color: var(--wac-red);"></i> Plus de Matchs</h2>
+            <span class="close-icon" onclick="toggleCard('capes-card', false)">&times;</span>
+        </div>
+        <div class="table-wrapper">
+            <table class="stats-table">
+                <thead>
+                    <tr>
+                        <th style="text-align: left; padding-left: 20px;">Joueur</th>
+                        <th>Matchs</th>
+                    </tr>
+                </thead>
+                <tbody id="capes-body"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <div id="details-card" class="stats-card">
+        <div class="stats-header">
+            <h2><i data-lucide="info" style="color: var(--wac-red);"></i> Détails par Joueur</h2>
+            <span class="close-icon" onclick="toggleCard('details-card', false)">&times;</span>
+        </div>
+        <div class="table-wrapper">
+            <table class="stats-table">
+                <thead>
+                    <tr>
+                        <th style="text-align: left; padding-left: 20px;">Joueur</th>
+                        <th>MJ</th>
+                        <th>Tit.</th>
+                        <th>Buts</th>
+                        <th style="color: #ca8a04;">CJ</th>
+                        <th style="color: var(--wac-red);">CR</th>
+                        <th>Min.</th>
+                        <th>TAB</th>
+                    </tr>
+                </thead>
+                <tbody id="details-body"></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+    const rawData = {{ raw_data | tojson | safe }};
+
+    function toggleCard(cardId, show) {
+        const card = document.getElementById(cardId);
+        const btn = document.querySelector(`.tab-btn[data-target="${cardId}"]`);
+
+        if (show === undefined) show = card.style.display === 'none';
+
+        card.style.display = show ? 'block' : 'none';
+        if (btn) {
+            if (show) btn.classList.add('active');
+            else btn.classList.remove('active');
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+        const filterPlayer = document.getElementById('filterPlayer');
+        const filterSaison = document.getElementById('filterSaison');
+        const filterCompetition = document.getElementById('filterCompetition');
+        const filterEquipe = document.getElementById('filterEquipe');
+        const filterLieu = document.getElementById('filterLieu');
+        const resetFiltersBtn = document.getElementById('resetFilters');
+        const tabBtns = document.querySelectorAll('.tab-btn');
+
+        const playersList = document.getElementById('playersList');
+
+        function updateDropdowns() {
+            const currentFilters = {
+                Saison: filterSaison.value,
+                Competition: filterCompetition.value,
+                Equipe: filterEquipe.value,
+                Lieu: filterLieu.value
+            };
+
+            const filters = [
+                { id: 'Saison', el: filterSaison, label: 'Toutes les saisons' },
+                { id: 'Competition', el: filterCompetition, label: 'Compétitions' },
+                { id: 'Equipe', el: filterEquipe, label: 'Adversaires' },
+                { id: 'Lieu', el: filterLieu, label: 'Lieux' }
+            ];
+
+            filters.forEach(f => {
+                const otherFilters = filters.filter(x => x.id !== f.id);
+                const availableOptions = new Set();
+
+                rawData.forEach(m => {
+                    let matchAllOther = true;
+                    otherFilters.forEach(of => {
+                        const val = currentFilters[of.id];
+                        if (val !== "" && String(m[of.id] || "") !== val) {
+                            matchAllOther = false;
+                        }
+                    });
+                    if (matchAllOther && m[f.id]) {
+                        availableOptions.add(String(m[f.id]));
+                    }
+                });
+
+                const currentVal = f.el.value;
+                f.el.innerHTML = `<option value="">${f.label}</option>`;
+                
+                Array.from(availableOptions).sort().forEach(v => {
+                    const opt = document.createElement('option');
+                    opt.value = v; opt.textContent = v;
+                    if (v === currentVal) opt.selected = true;
+                    f.el.appendChild(opt);
+                });
+            });
+
+            // Handle the player list (datalist) separately to also be dependent
+            const availablePlayers = new Set();
+            rawData.forEach(m => {
+                let matchAll = true;
+                filters.forEach(f => {
+                    const val = currentFilters[f.id];
+                    if (val !== "" && String(m[f.id] || "") !== val) matchAll = false;
+                });
+                if (matchAll && m.Joueur && m.Joueur !== "0") availablePlayers.add(String(m.Joueur));
+            });
+            
+            playersList.innerHTML = "";
+            Array.from(availablePlayers).sort().forEach(p => {
+                const opt = document.createElement('option');
+                opt.value = p;
+                playersList.appendChild(opt);
+            });
+        }
+
+        // Initial dropdown population
+        updateDropdowns();
+
+        function updateStats() {
+            const fPlayer = filterPlayer.value.toLowerCase();
+            const fSaison = filterSaison.value;
+            const fComp = filterCompetition.value;
+            const fEquipe = filterEquipe.value;
+            const fLieu = filterLieu.value;
+
+            const playerStats = {};
+            const seasonalBreakdown = {}; // For the selected player
+
+            rawData.forEach(row => {
+                const pName = (row.Joueur || "").toString();
+                if (!pName || pName === "0") return;
+
+                const matchPlayer = fPlayer === "" || pName.toLowerCase().includes(fPlayer);
+                const matchSaison = fSaison === "" || row.Saison === fSaison;
+                const matchComp = fComp === "" || row.Competition === fComp;
+                const matchEquipe = fEquipe === "" || row.Equipe === fEquipe;
+                const matchLieu = fLieu === "" || row.Lieu === fLieu;
+
+                if (matchPlayer && matchSaison && matchComp && matchEquipe && matchLieu) {
+                    // Global stats
+                    if (!playerStats[pName]) {
+                        playerStats[pName] = { matches: 0, titulaire: 0, goals: 0, yellow: 0, red: 0, minutes: 0, tab_marque: 0, tab_rate: 0 };
+                    }
+                    playerStats[pName].matches += 1;
+                    if (row.Titulaire && row.Titulaire.toString().startsWith("Tit")) {
+                        playerStats[pName].titulaire += 1;
+                    }
+                    playerStats[pName].goals += parseInt(row.Buts) || 0;
+                    playerStats[pName].yellow += parseFloat(row.CartonJaune) || 0;
+                    playerStats[pName].red += parseFloat(row.CartonRouge) || 0;
+                    playerStats[pName].minutes += parseInt(row.Minutes) || 0;
+                    playerStats[pName].tab_marque += parseInt(row.TAB_Marque) || 0;
+                    playerStats[pName].tab_rate += parseInt(row.TAB_Rate) || 0;
+
+                    // Seasonal stats (only if ONE specific player is searched)
+                    if (fPlayer !== "" && pName.toLowerCase().includes(fPlayer)) {
+                        const sName = row.Saison || "Inconnue";
+                        if (!seasonalBreakdown[sName]) {
+                            seasonalBreakdown[sName] = { matches: 0, goals: 0, yellow: 0, red: 0, minutes: 0, tab_marque: 0, tab_rate: 0 };
+                        }
+                        seasonalBreakdown[sName].matches += 1;
+                        seasonalBreakdown[sName].goals += parseInt(row.Buts) || 0;
+                        seasonalBreakdown[sName].yellow += parseFloat(row.CartonJaune) || 0;
+                        seasonalBreakdown[sName].red += parseFloat(row.CartonRouge) || 0;
+                        seasonalBreakdown[sName].minutes += parseInt(row.Minutes) || 0;
+                        seasonalBreakdown[sName].tab_marque += parseInt(row.TAB_Marque) || 0;
+                        seasonalBreakdown[sName].tab_rate += parseInt(row.TAB_Rate) || 0;
+                    }
+                }
+            });
+
+            // Show/Hide Seasonal Card
+            const seasonalCard = document.getElementById('seasonal-card');
+            const seasonalBtn = document.getElementById('btn-seasonal');
+            const seasonalBody = document.getElementById('seasonal-body');
+
+            if (fPlayer !== "" && Object.keys(seasonalBreakdown).length > 0) {
+                seasonalCard.style.display = 'block';
+                seasonalBtn.style.display = 'inline-flex';
+                
+                let tM = 0, tG = 0, tY = 0, tR = 0, tMin = 0, tTM = 0, tTR = 0;
+                
+                seasonalBody.innerHTML = Object.keys(seasonalBreakdown)
+                    .sort((a, b) => b.localeCompare(a))
+                    .map(s => {
+                        const d = seasonalBreakdown[s];
+                        tM += d.matches; tG += d.goals; tY += d.yellow; tR += d.red; tMin += d.minutes;
+                        tTM += d.tab_marque; tTR += d.tab_rate;
+                        
+                        let tabStr = "";
+                        if (d.tab_marque > 0 || d.tab_rate > 0) {
+                            tabStr = `<span style="font-size: 0.75rem; white-space: nowrap;">${d.tab_marque > 0 ? '✅' + d.tab_marque : ''} ${d.tab_rate > 0 ? '❌' + d.tab_rate : ''}</span>`;
+                        }
+
+                        return `
+                        <tr>
+                            <td style="text-align: left; padding-left: 20px; font-weight: 700; color: var(--wac-black);">${s}</td>
+                            <td><span class="badge-premium">${d.matches}</span></td>
+                            <td style="font-weight: 700; color: var(--wac-red);">${d.goals}</td>
+                            <td>${d.yellow}</td>
+                            <td>${d.red}</td>
+                            <td style="color: var(--text-muted); font-size: 0.8rem;">${d.minutes}'</td>
+                            <td>${tabStr}</td>
+                        </tr>
+                        `;
+                    }).join('');
+
+                let totalTabStr = "";
+                if (tTM > 0 || tTR > 0) {
+                    totalTabStr = `<span style="white-space: nowrap;">✅${tTM} ❌${tTR}</span>`;
+                }
+
+                document.getElementById('seasonal-foot').innerHTML = `
+                    <tr>
+                        <td style="text-align: left; padding-left: 20px;">TOTAL CARRIÈRE</td>
+                        <td>${tM}</td>
+                        <td style="color: var(--wac-red);">${tG}</td>
+                        <td>${tY}</td>
+                        <td>${tR}</td>
+                        <td>${tMin}'</td>
+                        <td>${totalTabStr}</td>
+                    </tr>
+                `;
+            } else {
+                seasonalCard.style.display = 'none';
+                seasonalBtn.style.display = 'none';
+            }
+
+            // Update Tables
+            renderTable('buteurs-body', Object.keys(playerStats)
+                .map(p => ({ player: p, val: playerStats[p].goals }))
+                .filter(p => p.val > 0)
+                .sort((a, b) => b.val - a.val), 2);
+
+            renderTable('capes-body', Object.keys(playerStats)
+                .map(p => ({ player: p, val: playerStats[p].matches }))
+                .sort((a, b) => b.val - a.val), 2);
+
+            const detailsArray = Object.keys(playerStats)
+                .map(p => ({ player: p, ...playerStats[p] }))
+                .sort((a, b) => b.matches - a.matches || b.goals - a.goals);
+
+            document.getElementById('details-body').innerHTML = detailsArray.map(d => {
+                let tabStr = "";
+                if (d.tab_marque > 0 || d.tab_rate > 0) {
+                    tabStr = `<span style="font-size: 0.75rem; white-space: nowrap;">${d.tab_marque > 0 ? '✅' + d.tab_marque : ''} ${d.tab_rate > 0 ? '❌' + d.tab_rate : ''}</span>`;
+                }
+                return `
+                <tr onclick="selectPlayer('${d.player.replace(/'/g, "\\'")}')">
+                    <td class="player-name-cell">${d.player}</td>
+                    <td>${d.matches}</td>
+                    <td>${d.titulaire}</td>
+                    <td>${d.goals}</td>
+                    <td style="background: rgba(255, 215, 0, 0.1); font-weight: bold;">${d.yellow > 0 ? d.yellow : ''}</td>
+                    <td style="background: rgba(255, 77, 77, 0.1); font-weight: bold;">${d.red > 0 ? d.red : ''}</td>
+                    <td>${d.minutes}</td>
+                    <td>${tabStr}</td>
+                </tr>
+                `;
+            }).join('') || '<tr><td colspan="8">Aucune donnée</td></tr>';
+        }
+
+        function renderTable(id, data, cols) {
+            document.getElementById(id).innerHTML = data.map(d => `
+                <tr onclick="selectPlayer('${d.player.replace(/'/g, "\\'")}')">
+                    <td class="player-name-cell">${d.player}</td>
+                    <td><span class="badge-premium">${d.val}</span></td>
+                </tr>
+            `).join('') || `<tr><td colspan="${cols}">Aucune donnée</td></tr>`;
+        }
+
+        window.selectPlayer = function(name) {
+            filterPlayer.value = name;
+            updateStats();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            // Ensure seasonal card is visible
+            toggleCard('seasonal-card', true);
+        };
+
+        function handleFilterChange() {
+            updateDropdowns();
+            updateStats();
+        }
+
+        // Listeners
+        [filterSaison, filterCompetition, filterEquipe, filterLieu].forEach(el => {
+            el.addEventListener('change', handleFilterChange);
+        });
+        filterPlayer.addEventListener('input', updateStats);
+
+        tabBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                const target = btn.getAttribute('data-target');
+                toggleCard(target);
+            });
+        });
+
+        resetFiltersBtn.addEventListener('click', () => {
+            filterPlayer.value = '';
+            filterSaison.value = '';
+            filterCompetition.value = '';
+            filterEquipe.value = '';
+            filterLieu.value = '';
+            tabBtns.forEach(btn => toggleCard(btn.getAttribute('data-target'), true));
+            handleFilterChange();
+        });
+
+        // Initial setup
+        handleFilterChange();
+    });
+</script>
+{% endblock %}
