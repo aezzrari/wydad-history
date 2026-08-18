@@ -116,6 +116,39 @@
         padding-left: 10px;
     }
 
+    .project-note {
+        max-width: 1000px;
+        margin: 0 auto;
+        padding: 28px 30px;
+    }
+
+    .project-note h2 {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin: 0 0 16px;
+        color: var(--text-main);
+        font-size: 1.35rem;
+    }
+
+    .project-note h2 i {
+        width: 24px;
+        height: 24px;
+        color: var(--wac-red);
+        flex-shrink: 0;
+    }
+
+    .project-note p {
+        margin: 0 0 12px;
+        color: var(--text-muted);
+        font-size: 1rem;
+        line-height: 1.75;
+    }
+
+    .project-note p:last-child {
+        margin-bottom: 0;
+    }
+
     .recent-match-card {
         display: flex;
         align-items: center;
@@ -200,6 +233,15 @@
         .contribution-card {
             grid-template-columns: 1fr;
         }
+
+        .project-note {
+            padding: 22px;
+        }
+
+        .project-note h2 {
+            align-items: flex-start;
+            font-size: 1.15rem;
+        }
     }
 </style>
 {% endblock %}
@@ -214,6 +256,16 @@
             <i data-lucide="send"></i>
             Partager
         </a>
+    </div>
+</div>
+
+<div class="stats-preview">
+    <div class="section-label">Le Projet</div>
+    <div class="glass-card project-note">
+        <h2><i data-lucide="book-open"></i> Une archive du Wydad par comp&eacute;tition</h2>
+        <p>Ce site retrace l'histoire du Wydad AC dans les diff&eacute;rentes comp&eacute;titions nationales, africaines, arabes et internationales.</p>
+        <p>Depuis la saison 2012/2013, et depuis l'&eacute;dition 2011 en Ligue des Champions CAF, certaines fiches proposent aussi le d&eacute;tail des matchs : formations, buteurs, changements, cartons et autres informations disponibles.</p>
+        <p>Les autres saisons seront compl&eacute;t&eacute;es progressivement, au fur et &agrave; mesure, selon la disponibilit&eacute; et la fiabilit&eacute; des informations.</p>
     </div>
 </div>
 
