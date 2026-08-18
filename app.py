@@ -590,7 +590,8 @@ def build_wac_honours(botola_seasons):
         "Super Coupe Arabe": "badge-check"
     }
     intercontinental_icons = {
-        "Coupe Afro-Asiatique": "globe-2"
+        "Coupe Afro-Asiatique": "globe-2",
+        "Coupe Mohamed V": "trophy"
     }
     national_icons = {
         "Botola": "img-botola",
