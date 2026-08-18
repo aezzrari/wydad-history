@@ -133,6 +133,74 @@
         font-weight: 800;
         color: var(--wac-red);
     }
+
+    .contribution-card {
+        max-width: 1000px;
+        margin: 0 auto;
+        display: grid;
+        grid-template-columns: 0.9fr 1.1fr;
+        gap: 24px;
+        align-items: start;
+    }
+
+    .contribution-copy h2 {
+        color: var(--wac-black);
+        margin-bottom: 12px;
+    }
+
+    .contribution-copy p {
+        color: var(--text-muted);
+        font-size: 0.95rem;
+    }
+
+    .comment-status {
+        margin-top: 14px;
+        padding: 12px 14px;
+        border-radius: 10px;
+        background: #ecfdf5;
+        color: #047857;
+        font-weight: 800;
+        font-size: 0.88rem;
+    }
+
+    .comment-status.error {
+        background: #fef2f2;
+        color: #b91c1c;
+    }
+
+    .comment-form {
+        display: grid;
+        gap: 12px;
+    }
+
+    .comment-form input,
+    .comment-form textarea {
+        width: 100%;
+        background: #ffffff;
+        color: var(--text-main);
+        border: 1px solid var(--card-border);
+        border-radius: 10px;
+        padding: 12px 14px;
+        font: inherit;
+    }
+
+    .comment-form textarea {
+        min-height: 140px;
+        resize: vertical;
+    }
+
+    .comment-form input:focus,
+    .comment-form textarea:focus {
+        outline: none;
+        border-color: var(--wac-red);
+        box-shadow: 0 0 0 3px rgba(218, 0, 0, 0.1);
+    }
+
+    @media (max-width: 768px) {
+        .contribution-card {
+            grid-template-columns: 1fr;
+        }
+    }
 </style>
 {% endblock %}
 
@@ -202,6 +270,37 @@
             Authenticité
         </h3>
         <p style="color: var(--text-muted); font-size: 0.9rem;">Toutes les données sont extraites des archives officielles et des feuilles de match historiques.</p>
+    </div>
+</div>
+
+<div id="contribution" class="stats-preview" style="margin-bottom: 40px;">
+    <div class="section-label">Contributions des visiteurs</div>
+    <div class="glass-card contribution-card">
+        <div class="contribution-copy">
+            <h2>Une archive &agrave; corriger ou &agrave; compl&eacute;ter ?</h2>
+            <p>
+                WAC History grandit avec les souvenirs, documents et remarques des supporters.
+                Si vous avez une correction, une feuille de match, une photo, une anecdote ou une source fiable &agrave; partager,
+                laissez un message : chaque contribution aide &agrave; rendre l'histoire du Wydad plus pr&eacute;cise et plus vivante.
+            </p>
+
+            {% if request.args.get('comment') == 'sent' %}
+            <div class="comment-status">Merci, votre message a &eacute;t&eacute; enregistr&eacute; et envoy&eacute;.</div>
+            {% elif request.args.get('comment') == 'saved' %}
+            <div class="comment-status">Merci, votre message a &eacute;t&eacute; enregistr&eacute;.</div>
+            {% elif request.args.get('comment') == 'missing' %}
+            <div class="comment-status error">Merci d'indiquer votre nom et votre message.</div>
+            {% endif %}
+        </div>
+
+        <form class="comment-form" action="/commentaire" method="POST">
+            <input type="hidden" name="source_path" value="{{ request.path }}">
+            <input type="text" name="name" placeholder="Votre nom" required>
+            <input type="email" name="email" placeholder="Votre email (optionnel)">
+            <input type="text" name="subject" placeholder="Sujet" value="Contribution WAC History">
+            <textarea name="message" placeholder="Votre commentaire, correction ou information &agrave; ajouter" required></textarea>
+            <button type="submit" class="btn-premium">Envoyer le message</button>
+        </form>
     </div>
 </div>
 {% endblock %}

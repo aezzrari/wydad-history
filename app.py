@@ -5,6 +5,8 @@ import csv
 import hashlib
 import json
 import unicodedata
+import smtplib
+from email.message import EmailMessage
 from functools import wraps
 from collections import Counter
 from datetime import datetime, date
@@ -22,7 +24,10 @@ SITE_URL = "https://www.wydad-history.com"
 GOOGLE_VERIFICATION_FILE = "googleab9fc45267cc3e75.html"
 VISIT_LOG_PATH = os.path.join(app.root_path, "data", "visit_log.csv")
 VISIT_LOG_FIELDS = ["timestamp", "visitor_id", "path", "method"]
+VISITOR_MESSAGES_PATH = os.path.join(app.root_path, "data", "visitor_messages.csv")
+VISITOR_MESSAGE_FIELDS = ["timestamp", "name", "email", "subject", "message", "path"]
 BOTOLA_SEASONS_PATH = os.path.join(app.root_path, "data", "botola_seasons.json")
+CONTACT_EMAIL = os.environ.get("CONTACT_EMAIL", "")
 WAC_CUP_TITLES = [
     "1969/70",
     "1977/78",
@@ -381,6 +386,61 @@ def get_visit_stats():
     stats["top_pages"] = pages.most_common(8)
     return stats
 
+def write_visitor_message(message_row):
+    os.makedirs(os.path.dirname(VISITOR_MESSAGES_PATH), exist_ok=True)
+    file_exists = os.path.exists(VISITOR_MESSAGES_PATH)
+
+    with open(VISITOR_MESSAGES_PATH, "a", newline="", encoding="utf-8") as messages_file:
+        writer = csv.DictWriter(messages_file, fieldnames=VISITOR_MESSAGE_FIELDS)
+        if not file_exists:
+            writer.writeheader()
+        writer.writerow(message_row)
+
+def read_visitor_messages(limit=25):
+    if not os.path.exists(VISITOR_MESSAGES_PATH):
+        return []
+
+    with open(VISITOR_MESSAGES_PATH, newline="", encoding="utf-8") as messages_file:
+        reader = csv.DictReader(messages_file)
+        messages = list(reader)
+
+    return list(reversed(messages))[:limit]
+
+def send_visitor_message_email(message_row):
+    smtp_host = os.environ.get("SMTP_HOST")
+    smtp_port = int(os.environ.get("SMTP_PORT", "587"))
+    smtp_user = os.environ.get("SMTP_USER")
+    smtp_password = os.environ.get("SMTP_PASSWORD")
+
+    if not (CONTACT_EMAIL and smtp_host and smtp_user and smtp_password):
+        return False
+
+    email_message = EmailMessage()
+    email_message["Subject"] = f"WAC History - {message_row['subject']}"
+    email_message["From"] = smtp_user
+    email_message["To"] = CONTACT_EMAIL
+    if message_row["email"]:
+        email_message["Reply-To"] = message_row["email"]
+    email_message.set_content(
+        "\n".join([
+            f"Nom: {message_row['name']}",
+            f"Email: {message_row['email'] or 'Non renseigne'}",
+            f"Page: {message_row['path']}",
+            "",
+            message_row["message"],
+        ])
+    )
+
+    try:
+        with smtplib.SMTP(smtp_host, smtp_port, timeout=10) as smtp:
+            smtp.starttls()
+            smtp.login(smtp_user, smtp_password)
+            smtp.send_message(email_message)
+        return True
+    except Exception as exc:
+        app.logger.warning("Could not send visitor message email: %s", exc)
+        return False
+
 def load_botola_seasons():
     if not os.path.exists(BOTOLA_SEASONS_PATH):
         return []
@@ -657,6 +717,31 @@ def index():
 
     return render_template('index.html', data=data, latest_match=latest_match)
 
+@app.route("/commentaire", methods=["POST"])
+def visitor_comment():
+    name = request.form.get("name", "").strip()[:120]
+    email = request.form.get("email", "").strip()[:180]
+    subject = request.form.get("subject", "Contribution visiteur").strip()[:160]
+    message = request.form.get("message", "").strip()
+    source_path = request.form.get("source_path", "/").strip() or "/"
+
+    if not name or not message:
+        return redirect(url_for("index", comment="missing") + "#contribution")
+
+    message_row = {
+        "timestamp": datetime.now().isoformat(timespec="seconds"),
+        "name": name,
+        "email": email,
+        "subject": subject or "Contribution visiteur",
+        "message": message[:3000],
+        "path": source_path[:300],
+    }
+
+    write_visitor_message(message_row)
+    email_sent = send_visitor_message_email(message_row)
+    status = "sent" if email_sent else "saved"
+    return redirect(url_for("index", comment=status) + "#contribution")
+
 @app.route('/matchs')
 def matchs():
     df = pd.read_csv("data/Test_import.csv", encoding="utf-8", sep=";").fillna("")
@@ -857,7 +942,8 @@ def admin():
         joueurs=joueurs,
         journees=journees,
         recent_matches=recent_matches,
-        visit_stats=visit_stats
+        visit_stats=visit_stats,
+        visitor_messages=read_visitor_messages()
     )
 
 @app.route("/admin/add_match", methods=["POST"])

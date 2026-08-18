@@ -202,6 +202,37 @@
         font-size: 0.78rem;
         text-transform: uppercase;
     }
+
+    .message-list {
+        display: grid;
+        gap: 14px;
+        margin-top: 18px;
+    }
+
+    .visitor-message {
+        border: 1px solid var(--card-border);
+        border-radius: 12px;
+        padding: 14px;
+        background: #ffffff;
+    }
+
+    .visitor-message-header {
+        display: flex;
+        justify-content: space-between;
+        gap: 12px;
+        margin-bottom: 8px;
+        color: var(--text-muted);
+        font-size: 0.82rem;
+    }
+
+    .visitor-message strong {
+        color: var(--wac-black);
+    }
+
+    .visitor-message p {
+        margin-top: 8px;
+        white-space: pre-wrap;
+    }
 </style>
 
 <div class="admin-container mt-4">
@@ -224,6 +255,7 @@
         <button class="tab-btn" onclick="switchTab('tab-manage', this)">📋 Liste des Matchs</button>
         <button class="tab-btn" onclick="switchTab('tab-import', this)">📤 Importation CSV</button>
         <button class="tab-btn" onclick="switchTab('tab-visits', this)">Visites</button>
+        <button class="tab-btn" onclick="switchTab('tab-messages', this)">Messages</button>
     </div>
 
     <!-- Tab 1: Manual Entry -->
@@ -437,6 +469,29 @@
                 {% endfor %}
             </tbody>
         </table>
+    </div>
+
+    <div id="tab-messages" class="form-section admin-card">
+        <h3>Messages des visiteurs</h3>
+        <p>Les derniers commentaires envoy&eacute;s depuis la page d'accueil.</p>
+
+        <div class="message-list">
+            {% for message in visitor_messages %}
+            <div class="visitor-message">
+                <div class="visitor-message-header">
+                    <span>{{ message.timestamp }}</span>
+                    <span>{{ message.path }}</span>
+                </div>
+                <strong>{{ message.subject }}</strong>
+                <div>{{ message.name }}{% if message.email %} - {{ message.email }}{% endif %}</div>
+                <p>{{ message.message }}</p>
+            </div>
+            {% else %}
+            <div class="visitor-message">
+                Aucun message re&ccedil;u pour le moment.
+            </div>
+            {% endfor %}
+        </div>
     </div>
 </div>
 
