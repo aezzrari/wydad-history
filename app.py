@@ -51,7 +51,8 @@ WAC_ARAB_TROPHIES = [
     {"season": "1992", "competition": "Super Coupe Arabe"}
 ]
 WAC_INTERCONTINENTAL_TROPHIES = [
-    {"season": "1994", "competition": "Coupe Afro-Asiatique"}
+    {"season": "1994", "competition": "Coupe Afro-Asiatique"},
+    {"season": "1979", "competition": "Coupe Mohamed V"}
 ]
 WAC_LEGENDS = [
     {
