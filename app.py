@@ -166,7 +166,16 @@ CLUB_DISPLAY_ALIASES = {
     "association des douanes marocaines casablanca": "Association des Douanes Marocaines",
     "association des douanes marocaines casablnca": "Association des Douanes Marocaines",
     "raja beni mellal": "Raja Beni Mellal",
-    "etoile jeunesse sportive casablanca": "Etoile Jeunesse Sportive Casablanca"
+    "etoile jeunesse sportive casablanca": "Etoile Jeunesse Sportive Casablanca",
+    "sas": "Sporting Association de Salé",
+    "sass": "Sporting Association de Salé",
+    "sporting association de sale": "Sporting Association de Salé",
+    "sporting athletic de sale": "Sporting Association de Salé",
+    "sporting sale": "Sporting Association de Salé",
+    "ckt": "Chabab Kasba Tadla",
+    "jskt": "Chabab Kasba Tadla",
+    "chabab kasba tadla": "Chabab Kasba Tadla",
+    "chabab kasbat tadla": "Chabab Kasba Tadla"
 }
 PRE_INDEPENDENCE_CHAMPIONS = [
     ("1915/16", "CA Casablanca"),
