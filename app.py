@@ -720,7 +720,7 @@ def index():
         if not df_m.empty:
             row = df_m.iloc[0]
             latest_match = {
-                "equipe": row.get("Equipe", ""),
+                "equipe": canonical_club_name(row.get("Equipe", "")),
                 "competition": row.get("Competition", ""),
                 "saison": row.get("Saison", ""),
                 "date": row["DateMatch"].strftime("%d/%m/%Y"),
@@ -762,7 +762,7 @@ def visitor_comment():
 def matchs():
     df = pd.read_csv("data/Test_import.csv", encoding="utf-8", sep=";").fillna("")
 
-    df["Equipe"] = df["Equipe"].astype(str).str.strip().str.replace("/", "-")
+    df["Equipe_Raw"] = df["Equipe"].astype(str).str.strip().str.replace("/", "-")
     df["Journee"] = df["Journee"].astype(str).str.strip().str.replace("/", "-")
     df["match_key"] = (
         df["Saison"].astype(str).str.replace("/", "-")
@@ -771,8 +771,9 @@ def matchs():
         + "_"
         + df["Journee"]
         + "_"
-        + df["Equipe"]
+        + df["Equipe_Raw"]
     )
+    df["Equipe"] = df["Equipe"].apply(canonical_club_name)
     df["_row_order"] = range(len(df))
     df["_date_sort"] = pd.to_datetime(df["DateMatch"], errors="coerce")
     df["_season_sort"] = pd.to_numeric(
@@ -844,7 +845,9 @@ def formation(match_key):
         + df["Equipe"]
     )
 
-    formation_match = df[df["match_key"] == match_key]
+    formation_match = df[df["match_key"] == match_key].copy()
+    if not formation_match.empty:
+        formation_match["Equipe"] = formation_match["Equipe"].apply(canonical_club_name)
 
     titulaires = formation_match[
         formation_match["Titulaire"].astype(str).str.contains("Tit", na=False)
@@ -911,6 +914,9 @@ def players():
         if col in df.columns:
             df[col] = df[col].astype(str).str.strip()
 
+    if "Equipe" in df.columns:
+        df["Equipe"] = df["Equipe"].apply(canonical_club_name)
+
     raw_data = df.to_dict(orient="records")
 
     return render_template(
@@ -924,6 +930,7 @@ def admin():
     # Load unique teams and players for autocomplete
     try:
         df_m = pd.read_csv("data/Test_import.csv", sep=";", encoding="utf-8").fillna("")
+        df_m["Equipe"] = df_m["Equipe"].apply(canonical_club_name)
         equipes = sorted(df_m['Equipe'].dropna().unique().tolist())
         journees = sorted(df_m['Journee'].dropna().unique().tolist(), key=lambda x: str(x))
         
